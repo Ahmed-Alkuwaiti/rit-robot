@@ -1,0 +1,152 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-09-13-14-59-02-695016-Tek-800
+[INFO] [launch]: Default logging verbosity is set to INFO
+[simulation.launch] REPRODUCIBLE_SCENE_SEED=23
+[simulation.launch] 30 contact bridges configured
+[INFO] [perception_node-6]: process started with pid [811]
+[INFO] [manipulation_node-7]: process started with pid [813]
+[INFO] [navigation_node-8]: process started with pid [815]
+[INFO] [task_manager-9]: process started with pid [817]
+[INFO] [gz-1]: process started with pid [801]
+[INFO] [robot_state_publisher-2]: process started with pid [803]
+[INFO] [parameter_bridge-3]: process started with pid [805]
+[INFO] [parameter_bridge-4]: process started with pid [807]
+[INFO] [parameter_bridge-5]: process started with pid [809]
+[parameter_bridge-3] [INFO] [1789311543.012033790] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.014089742] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.016902799] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom (gz.msgs.Odometry) -> /odom (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.017952173] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom_tf (gz.msgs.Pose_V) -> /odom_tf (tf2_msgs/msg/TFMessage)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.019133567] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan_front_raw (gz.msgs.LaserScan) -> /scan_front_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.020926175] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan_rear_raw (gz.msgs.LaserScan) -> /scan_rear_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.021117862] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/base_imu (gz.msgs.IMU) -> /base_imu (sensor_msgs/msg/Imu)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789311543.021308418] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/erc_collection_bin/link/collection_bin_base_link/sensor/bin_contact_sensor/contact (gz.msgs.Contacts) -> /world/erc_world/model/erc_collection_bin/link/collection_bin_base_link/sensor/bin_contact_sensor/contact (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[robot_state_publisher-2] [INFO] [1789311543.042191165] [robot_state_publisher]: got segment arm_left_1_link
+[robot_state_publisher-2] [INFO] [1789311543.042280528] [robot_state_publisher]: got segment arm_left_2_link
+[robot_state_publisher-2] [INFO] [1789311543.042285857] [robot_state_publisher]: got segment arm_left_3_link
+[robot_state_publisher-2] [INFO] [1789311543.042288319] [robot_state_publisher]: got segment arm_left_4_link
+[robot_state_publisher-2] [INFO] [1789311543.042290853] [robot_state_publisher]: got segment arm_left_5_link
+[robot_state_publisher-2] [INFO] [1789311543.042293242] [robot_state_publisher]: got segment arm_left_6_link
+[robot_state_publisher-2] [INFO] [1789311543.042295576] [robot_state_publisher]: got segment arm_left_7_link
+[robot_state_publisher-2] [INFO] [1789311543.042297887] [robot_state_publisher]: got segment arm_left_tool_link
+[robot_state_publisher-2] [INFO] [1789311543.042300341] [robot_state_publisher]: got segment arm_right_1_link
+[robot_state_publisher-2] [INFO] [1789311543.042302700] [robot_state_publisher]: got segment arm_right_2_link
+[robot_state_publisher-2] [INFO] [1789311543.042305063] [robot_state_publisher]: got segment arm_right_3_link
+[robot_state_publisher-2] [INFO] [1789311543.042307357] [robot_state_publisher]: got segment arm_right_4_link
+[robot_state_publisher-2] [INFO] [1789311543.042309673] [robot_state_publisher]: got segment arm_right_5_link
+[robot_state_publisher-2] [INFO] [1789311543.042311999] [robot_state_publisher]: got segment arm_right_6_link
+[robot_state_publisher-2] [INFO] [1789311543.042314391] [robot_state_publisher]: got segment arm_right_7_link
+[robot_state_publisher-2] [INFO] [1789311543.042316707] [robot_state_publisher]: got segment arm_right_tool_link
+[robot_state_publisher-2] [INFO] [1789311543.042318988] [robot_state_publisher]: got segment base_antenna_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042321557] [robot_state_publisher]: got segment base_antenna_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042323995] [robot_state_publisher]: got segment base_dock_link
+[robot_state_publisher-2] [INFO] [1789311543.042326434] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-2] [INFO] [1789311543.042328676] [robot_state_publisher]: got segment base_front_laser_link
+[robot_state_publisher-2] [INFO] [1789311543.042330993] [robot_state_publisher]: got segment base_imu_link
+[robot_state_publisher-2] [INFO] [1789311543.042333385] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1789311543.042335864] [robot_state_publisher]: got segment base_rear_laser_link
+[robot_state_publisher-2] [INFO] [1789311543.042338301] [robot_state_publisher]: got segment eye_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042340667] [robot_state_publisher]: got segment eye_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042343055] [robot_state_publisher]: got segment gripper_left_base_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042345476] [robot_state_publisher]: got segment gripper_left_base_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042347811] [robot_state_publisher]: got segment gripper_left_base_link
+[robot_state_publisher-2] [INFO] [1789311543.042350290] [robot_state_publisher]: got segment gripper_left_fingertip_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042352562] [robot_state_publisher]: got segment gripper_left_fingertip_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042354836] [robot_state_publisher]: got segment gripper_left_grasping_link
+[robot_state_publisher-2] [INFO] [1789311543.042357198] [robot_state_publisher]: got segment gripper_left_inner_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042359895] [robot_state_publisher]: got segment gripper_left_inner_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042362417] [robot_state_publisher]: got segment gripper_left_outer_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042364716] [robot_state_publisher]: got segment gripper_left_outer_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042366972] [robot_state_publisher]: got segment gripper_left_screw_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042369350] [robot_state_publisher]: got segment gripper_left_screw_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042371614] [robot_state_publisher]: got segment gripper_right_base_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042373855] [robot_state_publisher]: got segment gripper_right_base_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042376129] [robot_state_publisher]: got segment gripper_right_base_link
+[robot_state_publisher-2] [INFO] [1789311543.042378535] [robot_state_publisher]: got segment gripper_right_fingertip_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042381442] [robot_state_publisher]: got segment gripper_right_fingertip_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042383709] [robot_state_publisher]: got segment gripper_right_grasping_link
+[robot_state_publisher-2] [INFO] [1789311543.042385985] [robot_state_publisher]: got segment gripper_right_inner_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042388303] [robot_state_publisher]: got segment gripper_right_inner_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042409738] [robot_state_publisher]: got segment gripper_right_outer_finger_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042412224] [robot_state_publisher]: got segment gripper_right_outer_finger_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042414605] [robot_state_publisher]: got segment gripper_right_screw_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042417020] [robot_state_publisher]: got segment gripper_right_screw_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042419421] [robot_state_publisher]: got segment head_1_link
+[robot_state_publisher-2] [INFO] [1789311543.042422074] [robot_state_publisher]: got segment head_2_link
+[robot_state_publisher-2] [INFO] [1789311543.042424533] [robot_state_publisher]: got segment head_front_camera_accel_frame
+[robot_state_publisher-2] [INFO] [1789311543.042426902] [robot_state_publisher]: got segment head_front_camera_accel_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042429198] [robot_state_publisher]: got segment head_front_camera_bottom_screw_frame
+[robot_state_publisher-2] [INFO] [1789311543.042431470] [robot_state_publisher]: got segment head_front_camera_color_eye_frame
+[robot_state_publisher-2] [INFO] [1789311543.042433780] [robot_state_publisher]: got segment head_front_camera_color_frame
+[robot_state_publisher-2] [INFO] [1789311543.042436069] [robot_state_publisher]: got segment head_front_camera_color_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042438488] [robot_state_publisher]: got segment head_front_camera_depth_frame
+[robot_state_publisher-2] [INFO] [1789311543.042440802] [robot_state_publisher]: got segment head_front_camera_depth_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042443164] [robot_state_publisher]: got segment head_front_camera_gyro_frame
+[robot_state_publisher-2] [INFO] [1789311543.042445492] [robot_state_publisher]: got segment head_front_camera_gyro_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042447890] [robot_state_publisher]: got segment head_front_camera_infra1_frame
+[robot_state_publisher-2] [INFO] [1789311543.042450215] [robot_state_publisher]: got segment head_front_camera_infra1_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042452652] [robot_state_publisher]: got segment head_front_camera_infra2_frame
+[robot_state_publisher-2] [INFO] [1789311543.042455839] [robot_state_publisher]: got segment head_front_camera_infra2_optical_frame
+[robot_state_publisher-2] [INFO] [1789311543.042458304] [robot_state_publisher]: got segment head_front_camera_link
+[robot_state_publisher-2] [INFO] [1789311543.042460682] [robot_state_publisher]: got segment head_screen_link
+[robot_state_publisher-2] [INFO] [1789311543.042463062] [robot_state_publisher]: got segment sellion_link
+[robot_state_publisher-2] [INFO] [1789311543.042465531] [robot_state_publisher]: got segment suspension_front_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042467828] [robot_state_publisher]: got segment suspension_front_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042470254] [robot_state_publisher]: got segment suspension_rear_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042472590] [robot_state_publisher]: got segment suspension_rear_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042474832] [robot_state_publisher]: got segment torso_arm_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042477565] [robot_state_publisher]: got segment torso_arm_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042479942] [robot_state_publisher]: got segment torso_base_link
+[robot_state_publisher-2] [INFO] [1789311543.042482251] [robot_state_publisher]: got segment torso_fixed_column_link
+[robot_state_publisher-2] [INFO] [1789311543.042484521] [robot_state_publisher]: got segment torso_head_link
+[robot_state_publisher-2] [INFO] [1789311543.042486833] [robot_state_publisher]: got segment torso_lift_link
+[robot_state_publisher-2] [INFO] [1789311543.042489085] [robot_state_publisher]: got segment virtual_base_laser_link
+[robot_state_publisher-2] [INFO] [1789311543.042491450] [robot_state_publisher]: got segment wheel_front_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042493907] [robot_state_publisher]: got segment wheel_front_right_link
+[robot_state_publisher-2] [INFO] [1789311543.042496241] [robot_state_publisher]: got segment wheel_rear_left_link
+[robot_state_publisher-2] [INFO] [1789311543.042498687] [robot_state_publisher]: got segment wheel_rear_right_link
+[task_manager-9] [0m[INFO] [1789311543.132356608] [task_manager]: WAITING_FOR_READY[0m
+[task_manager-9] [0m[INFO] [1789311543.217413747] [task_manager]: WAITING_FOR_READY: clock, navigation:heartbeat, navigation:expected_one_command_subscriber, manipulation:heartbeat, manipulation:expected_one_command_subscriber, perception:heartbeat, perception:expected_one_command_subscriber[0m
+[manipulation_node-7] Traceback (most recent call last):
+[manipulation_node-7]   File "/opt/erc_ws/install/rit_robocomp_2026/lib/rit_robocomp_2026/manipulation_node", line 33, in <module>
+[manipulation_node-7]     sys.exit(load_entry_point('rit-robocomp-2026', 'console_scripts', 'manipulation_node')())
+[manipulation_node-7]   File "/opt/erc_ws/build/rit_robocomp_2026/rit_robocomp_2026/manipulation_node.py", line 555, in main
+[manipulation_node-7]     run_node(ManipulationNode,args)
+[manipulation_node-7]   File "/opt/erc_ws/build/rit_robocomp_2026/rit_robocomp_2026/runtime.py", line 129, in run_node
+[manipulation_node-7]     node = factory()
+[manipulation_node-7]   File "/opt/erc_ws/build/rit_robocomp_2026/rit_robocomp_2026/manipulation_node.py", line 59, in __init__
+[manipulation_node-7]     self.clients={g:ActionClient(self,FollowJointTrajectory,f'/{controller}/follow_joint_trajectory')
+[manipulation_node-7] AttributeError: can't set attribute 'clients'
+[gz-1] QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+[task_manager-9] [0m[INFO] [1789311543.364594535] [task_manager]: HEALTH {"component": "task", "boot": "ea71ad3f58864bdfbecd9235fbf5144b", "ready": false, "reason": "clock, navigation:heartbeat, navigation:expected_one_command_subscriber, manipulation:heartbeat, manipulation:expected_one_command_subscriber, perception:heartbeat", "active": "WAITING_FOR_READY", "sim_time": 0.0, "clock_progress_age_wall": 0.25449089799985813}[0m
+[gz-1] [1;31m[Err] [Server.cc:86] [0m[1;31mError Code [0m[1;31m14[0m[1;31m: [0m[1;31m[/sdf/world[@name="erc_world"]/include[0]/uri:/opt/erc_ws/install/erc_description/share/erc_description/worlds/erc_world.sdf:L172]: [0m[1;31mMsg: [0m[1;31mUnable to find uri[model://erc_description/models/table/sdf/erc_table.sdf][0m[1;31m[0m
+[gz-1] [1;31m[Err] [Server.cc:86] [0m[1;31mError Code [0m[1;31m14[0m[1;31m: [0m[1;31m[/sdf/world[@name="erc_world"]/include[1]/uri:/opt/erc_ws/install/erc_description/share/erc_description/worlds/erc_world.sdf:L179]: [0m[1;31mMsg: [0m[1;31mUnable to find uri[model://erc_description/models/shelf/sdf/erc_shelf.sdf][0m[1;31m[0m
+[gz-1] [1;31m[Err] [Server.cc:86] [0m[1;31mError Code [0m[1;31m14[0m[1;31m: [0m[1;31m[/sdf/world[@name="erc_world"]/include[2]/uri:/opt/erc_ws/install/erc_description/share/erc_description/worlds/erc_world.sdf:L186]: [0m[1;31mMsg: [0m[1;31mUnable to find uri[model://erc_description/models/collection_bin/sdf/erc_collection_bin.sdf][0m[1;31m[0m
+[parameter_bridge-3] [INFO] [1789311543.449753608] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[ERROR] [manipulation_node-7]: process has died [pid 813, exit code 1, cmd '/opt/erc_ws/install/rit_robocomp_2026/lib/rit_robocomp_2026/manipulation_node --ros-args -r __node:=manipulation_node --params-file /opt/erc_ws/install/rit_robocomp_2026/share/rit_robocomp_2026/config/mission.yaml --params-file /tmp/launch_params_ffufun3h'].
+[INFO] [task_manager-9]: sending signal 'SIGINT' to process[task_manager-9]
+[INFO] [navigation_node-8]: sending signal 'SIGINT' to process[navigation_node-8]
+[INFO] [perception_node-6]: sending signal 'SIGINT' to process[perception_node-6]
+[INFO] [parameter_bridge-5]: sending signal 'SIGINT' to process[parameter_bridge-5]
+[INFO] [parameter_bridge-4]: sending signal 'SIGINT' to process[parameter_bridge-4]
+[INFO] [parameter_bridge-3]: sending signal 'SIGINT' to process[parameter_bridge-3]
+[INFO] [robot_state_publisher-2]: sending signal 'SIGINT' to process[robot_state_publisher-2]
+[INFO] [gz-1]: sending signal 'SIGINT' to process[gz-1]
+[parameter_bridge-5] [INFO] [1789311543.556367821] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[parameter_bridge-4] [INFO] [1789311543.557162521] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[parameter_bridge-3] [INFO] [1789311543.557901898] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[robot_state_publisher-2] [INFO] [1789311543.558639965] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [parameter_bridge-3]: process has finished cleanly [pid 805]
+[gz-1] /usr/lib/ruby/gz/cmdsim8.rb:201:in `kill': No such process (Errno::ESRCH)
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:201:in `killProcess'
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:570:in `handle_signal'
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:574:in `block in execute'
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:217:in `sleep'
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:217:in `killProcess'
+[gz-1] 	from /usr/lib/ruby/gz/cmdsim8.rb:587:in `execute'
+[gz-1] 	from /usr/bin/gz:317:in `<main>'
+[ERROR] [gz-1]: process has died [pid 801, exit code 1, cmd 'gz sim -r /opt/erc_ws/install/erc_description/share/erc_description/worlds/erc_world.sdf'].
+[INFO] [parameter_bridge-5]: process has finished cleanly [pid 809]
+[INFO] [parameter_bridge-4]: process has finished cleanly [pid 807]
+[INFO] [robot_state_publisher-2]: process has finished cleanly [pid 803]
+[INFO] [task_manager-9]: process has finished cleanly [pid 817]
+[INFO] [perception_node-6]: process has finished cleanly [pid 811]
+[INFO] [navigation_node-8]: process has finished cleanly [pid 815]

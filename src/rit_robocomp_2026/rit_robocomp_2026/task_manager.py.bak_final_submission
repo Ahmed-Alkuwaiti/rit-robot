@@ -1,0 +1,648 @@
+import time
+
+import rclpy
+from rclpy.node import Node
+
+from std_msgs.msg import String, Int32
+from geometry_msgs.msg import PoseStamped
+
+
+class TaskManager(Node):
+
+    def __init__(self):
+        super().__init__('task_manager')
+
+        self.nav_pub = self.create_publisher(
+            String,
+            '/rit/navigation/command',
+            10
+        )
+
+        self.manip_pub = self.create_publisher(
+            String,
+            '/rit/manipulation/command',
+            10
+        )
+
+        self.perception_pub = self.create_publisher(
+            String,
+            '/rit/perception/command',
+            10
+        )
+
+        self.status_pub = self.create_publisher(
+            String,
+            '/rit/task/status',
+            10
+        )
+
+        self.create_subscription(
+            String,
+            '/rit/navigation/status',
+            self.on_navigation,
+            10
+        )
+
+        self.create_subscription(
+            String,
+            '/rit/manipulation/status',
+            self.on_manipulation,
+            10
+        )
+
+        self.create_subscription(
+            Int32,
+            '/erc/shelf_column_identification',
+            self.on_column,
+            10
+        )
+
+        self.create_subscription(
+            Int32,
+            '/erc/shelf_row_identification',
+            self.on_row,
+            10
+        )
+
+        self.create_subscription(
+            PoseStamped,
+            '/rit/perception/book_target',
+            self.on_book_target,
+            10
+        )
+
+        self.create_subscription(
+            PoseStamped,
+            '/rit/perception/bin_target',
+            self.on_bin_target,
+            10
+        )
+
+        self.declare_parameter('auto_start', True)
+        self.declare_parameter('startup_delay', 5.0)
+        self.declare_parameter('target_wait_timeout', 5.0)
+        self.declare_parameter('target_handoff_delay', 0.20)
+
+        self.state = 'IDLE'
+
+        self.column = None
+        self.row = None
+
+        self.book_target_ready = False
+        self.bin_target_ready = False
+
+        self.book_target_received_at = None
+        self.bin_target_received_at = None
+        self.target_wait_started_at = None
+
+        self.started_at = time.monotonic()
+        self.started = False
+
+        self.state_started_at = time.monotonic()
+        self.last_watchdog_log_at = 0.0
+        self.last_ready_wait_log_at = 0.0
+
+        self.create_timer(
+            0.1,
+            self.tick
+        )
+
+        self.publish_status('IDLE')
+
+    def publish_status(self, value):
+        self.status_pub.publish(
+            String(data=value)
+        )
+
+        self.get_logger().info(
+            value
+        )
+
+    def enter_state(self, state, status):
+        self.state = state
+        self.state_started_at = time.monotonic()
+        self.publish_status(status)
+
+    def send_navigation(self, command):
+        self.nav_pub.publish(
+            String(data=command)
+        )
+
+        self.get_logger().info(
+            f'NAV COMMAND -> {command}'
+        )
+
+    def send_manipulation(self, command):
+        self.manip_pub.publish(
+            String(data=command)
+        )
+
+        self.get_logger().info(
+            f'MANIP COMMAND -> {command}'
+        )
+
+    def send_perception(self, command):
+        self.perception_pub.publish(
+            String(data=command)
+        )
+
+        self.get_logger().info(
+            f'PERCEPTION COMMAND -> {command}'
+        )
+
+    def tick(self):
+        if self.started:
+            self.target_wait_tick()
+            self.state_watchdog_tick()
+            return
+
+        if not self.get_parameter('auto_start').value:
+            return
+
+        delay = float(
+            self.get_parameter('startup_delay').value
+        )
+
+        now = time.monotonic()
+
+        if now - self.started_at < delay:
+            return
+
+        workers_ready = (
+            self.nav_pub.get_subscription_count() > 0
+            and self.manip_pub.get_subscription_count() > 0
+            and self.perception_pub.get_subscription_count() > 0
+        )
+
+        if not workers_ready:
+            if now - self.last_ready_wait_log_at >= 2.0:
+                self.last_ready_wait_log_at = now
+
+                self.get_logger().warning(
+                    'Waiting for navigation/manipulation/perception nodes'
+                )
+
+            return
+
+        self.started = True
+
+        self.enter_state(
+            'TUCKING_ARMS',
+            'RUNNING:TUCKING_ARMS'
+        )
+
+        self.send_manipulation(
+            'TUCK_ARMS'
+        )
+
+    def target_wait_tick(self):
+        now = time.monotonic()
+
+        timeout = float(
+            self.get_parameter('target_wait_timeout').value
+        )
+
+        handoff_delay = float(
+            self.get_parameter('target_handoff_delay').value
+        )
+
+        if self.state == 'WAITING_FOR_BOOK_TARGET':
+            if (
+                self.book_target_ready
+                and self.book_target_received_at is not None
+                and now - self.book_target_received_at >= handoff_delay
+            ):
+                self.target_wait_started_at = None
+
+                self.enter_state(
+                    'PREPARING_GRASP',
+                    'RUNNING:PREPARING_GRASP'
+                )
+
+                self.send_manipulation(
+                    'PREPARE_GRASP'
+                )
+
+                return
+
+        elif self.state == 'WAITING_FOR_BIN_TARGET':
+            if (
+                self.bin_target_ready
+                and self.bin_target_received_at is not None
+                and now - self.bin_target_received_at >= handoff_delay
+            ):
+                self.target_wait_started_at = None
+
+                self.enter_state(
+                    'PREPARING_PLACE',
+                    'RUNNING:PREPARING_PLACE'
+                )
+
+                self.send_manipulation(
+                    'PREPARE_PLACE'
+                )
+
+                return
+
+        else:
+            return
+
+        if (
+            self.target_wait_started_at is not None
+            and now - self.target_wait_started_at >= timeout
+        ):
+            self.fail_mission(
+                f'{self.state}:TARGET_TIMEOUT'
+            )
+
+    def state_watchdog_tick(self):
+        if self.state in (
+            'IDLE',
+            'DONE',
+            'FAILED',
+            'WAITING_FOR_BOOK_TARGET',
+            'WAITING_FOR_BIN_TARGET',
+        ):
+            return
+
+        now = time.monotonic()
+        elapsed = now - self.state_started_at
+
+        timeout_by_state = {
+            'TUCKING_ARMS': 190.0,
+            'SEARCHING_SHELF': 210.0,
+            'ALIGNING_SHELF': 500.0,
+            'APPROACHING_SHELF': 120.0,
+            'PREPARING_GRASP': 120.0,
+            'GRASPING': 120.0,
+            'LIFTING': 120.0,
+            'TRANSPORT_POSE': 120.0,
+            'SEARCHING_BIN': 210.0,
+            'ALIGNING_BIN': 120.0,
+            'PREPARING_PLACE': 120.0,
+            'PLACING': 120.0,
+            'SAFE_POSE': 120.0,
+        }
+
+        timeout = timeout_by_state.get(
+            self.state,
+            120.0
+        )
+
+        if now - self.last_watchdog_log_at >= 5.0:
+            self.last_watchdog_log_at = now
+
+            self.get_logger().info(
+                f'WATCHDOG state={self.state}, '
+                f'elapsed={elapsed:.1f}s'
+            )
+
+        if elapsed >= timeout:
+            self.fail_mission(
+                f'{self.state}:STATE_TIMEOUT'
+            )
+
+    def on_column(self, message):
+        self.column = message.data
+
+        self.get_logger().info(
+            f'Cabinet/column detected: {self.column}'
+        )
+
+        self.check_shelf_target()
+
+    def on_row(self, message):
+        self.row = message.data
+
+        self.get_logger().info(
+            f'Row detected: {self.row}'
+        )
+
+        self.check_shelf_target()
+
+    def check_shelf_target(self):
+        if self.state != 'SEARCHING_SHELF':
+            return
+
+        if self.column is None:
+            return
+
+        if self.row is None:
+            return
+
+        self.get_logger().info(
+            f'Target shelf found: '
+            f'column={self.column}, row={self.row}'
+        )
+
+        self.send_navigation(
+            'STOP'
+        )
+
+        self.enter_state(
+            'ALIGNING_SHELF',
+            'RUNNING:ALIGNING_SHELF'
+        )
+
+        self.send_navigation(
+            'ALIGN_SHELF'
+        )
+
+    def on_book_target(self, message):
+        self.book_target_ready = True
+
+        self.get_logger().info(
+            'Precise book target received'
+        )
+
+        if (
+            self.state == 'WAITING_FOR_BOOK_TARGET'
+            and self.book_target_received_at is None
+        ):
+            self.book_target_received_at = time.monotonic()
+
+    def on_bin_target(self, message):
+        self.bin_target_ready = True
+
+        self.get_logger().info(
+            'Precise bin target received'
+        )
+
+        if (
+            self.state == 'WAITING_FOR_BIN_TARGET'
+            and self.bin_target_received_at is None
+        ):
+            self.bin_target_received_at = time.monotonic()
+
+    def on_manipulation(self, message):
+        status = message.data
+
+        self.get_logger().info(
+            f'MANIP STATUS <- {status}'
+        )
+
+        if status.startswith('FAILED:'):
+            self.fail_mission(
+                f'manipulation:{status}'
+            )
+            return
+
+        if status == 'STOPPED':
+            if self.state == 'FAILED':
+                return
+
+            self.fail_mission(
+                'manipulation:STOPPED'
+            )
+            return
+
+        if (
+            self.state == 'TUCKING_ARMS'
+            and status == 'SUCCEEDED:TUCK_ARMS'
+        ):
+            self.column = None
+            self.row = None
+
+            self.enter_state(
+                'SEARCHING_SHELF',
+                'RUNNING:SEARCHING_SHELF'
+            )
+
+            self.send_perception(
+                'BOOK'
+            )
+
+            self.send_navigation(
+                'SEARCH_SHELF'
+            )
+
+        elif (
+            self.state == 'PREPARING_GRASP'
+            and status == 'SUCCEEDED:PREPARE_GRASP'
+        ):
+            self.enter_state(
+                'GRASPING',
+                'RUNNING:GRASPING'
+            )
+
+            self.send_manipulation(
+                'GRASP'
+            )
+
+        elif (
+            self.state == 'GRASPING'
+            and status == 'SUCCEEDED:GRASP'
+        ):
+            self.enter_state(
+                'BACKING_AWAY',
+                'RUNNING:BACKING_AWAY'
+            )
+
+            self.send_navigation(
+                'BACK_AWAY_WITH_BOOK'
+            )
+
+        elif (
+            self.state == 'LIFTING'
+            and status == 'SUCCEEDED:LIFT_AND_RETRACT'
+        ):
+            self.enter_state(
+                'TRANSPORT_POSE',
+                'RUNNING:TRANSPORT_POSE'
+            )
+
+            self.send_manipulation(
+                'TRANSPORT_POSE'
+            )
+
+        elif (
+            self.state == 'TRANSPORT_POSE'
+            and status == 'SUCCEEDED:TRANSPORT_POSE'
+        ):
+            self.bin_target_ready = False
+            self.bin_target_received_at = None
+
+            self.enter_state(
+                'SEARCHING_BIN',
+                'RUNNING:SEARCHING_BIN'
+            )
+
+            self.send_perception(
+                'BIN'
+            )
+
+            self.send_navigation(
+                'SEARCH_BIN'
+            )
+
+        elif (
+            self.state == 'PREPARING_PLACE'
+            and status == 'SUCCEEDED:PREPARE_PLACE'
+        ):
+            self.enter_state(
+                'PLACING',
+                'RUNNING:PLACING'
+            )
+
+            self.send_manipulation(
+                'PLACE'
+            )
+
+        elif (
+            self.state == 'PLACING'
+            and status == 'SUCCEEDED:PLACE'
+        ):
+            self.enter_state(
+                'SAFE_POSE',
+                'RUNNING:SAFE_POSE'
+            )
+
+            self.send_manipulation(
+                'SAFE_POSE'
+            )
+
+        elif (
+            self.state == 'SAFE_POSE'
+            and status == 'SUCCEEDED:SAFE_POSE'
+        ):
+            self.state = 'DONE'
+            self.state_started_at = time.monotonic()
+
+            self.send_navigation(
+                'STOP'
+            )
+
+            self.publish_status(
+                'SUCCEEDED:MISSION'
+            )
+
+    def on_navigation(self, message):
+        status = message.data
+
+        self.get_logger().info(
+            f'NAV STATUS <- {status}'
+        )
+
+        if status.startswith('FAILED:'):
+            self.fail_mission(
+                f'navigation:{status}'
+            )
+            return
+
+        if (
+            self.state == 'ALIGNING_SHELF'
+            and status == 'SUCCEEDED:ALIGN_SHELF'
+        ):
+            self.enter_state(
+                'APPROACHING_SHELF',
+                'RUNNING:APPROACHING_SHELF'
+            )
+
+            self.send_perception(
+                'BOOK'
+            )
+
+            self.send_navigation(
+                'APPROACH_SHELF'
+            )
+
+        elif (
+            self.state == 'BACKING_AWAY'
+            and status == 'SUCCEEDED:BACK_AWAY_WITH_BOOK'
+        ):
+            self.enter_state(
+                'LIFTING',
+                'RUNNING:LIFTING'
+            )
+
+            self.send_manipulation(
+                'LIFT_AND_RETRACT'
+            )
+
+        elif (
+            self.state == 'APPROACHING_SHELF'
+            and status == 'SUCCEEDED:APPROACH_SHELF'
+        ):
+            self.book_target_ready = False
+            self.book_target_received_at = None
+            self.target_wait_started_at = time.monotonic()
+
+            self.enter_state(
+                'WAITING_FOR_BOOK_TARGET',
+                'RUNNING:WAITING_FOR_BOOK_TARGET'
+            )
+
+            self.send_perception(
+                'BOOK'
+            )
+
+        elif (
+            self.state == 'SEARCHING_BIN'
+            and status == 'SUCCEEDED:SEARCH_BIN'
+        ):
+            self.enter_state(
+                'ALIGNING_BIN',
+                'RUNNING:ALIGNING_BIN'
+            )
+
+            self.send_navigation(
+                'ALIGN_BIN'
+            )
+
+        elif (
+            self.state == 'ALIGNING_BIN'
+            and status == 'SUCCEEDED:ALIGN_BIN'
+        ):
+            self.bin_target_ready = False
+            self.bin_target_received_at = None
+            self.target_wait_started_at = time.monotonic()
+
+            self.enter_state(
+                'WAITING_FOR_BIN_TARGET',
+                'RUNNING:WAITING_FOR_BIN_TARGET'
+            )
+
+            self.send_perception(
+                'BIN'
+            )
+
+    def fail_mission(self, reason):
+        if self.state == 'FAILED':
+            return
+
+        self.state = 'FAILED'
+        self.state_started_at = time.monotonic()
+
+        self.send_navigation(
+            'STOP'
+        )
+
+        self.send_manipulation(
+            'STOP'
+        )
+
+        self.publish_status(
+            f'FAILED:MISSION:{reason}'
+        )
+
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    node = TaskManager()
+
+    try:
+        rclpy.spin(node)
+
+    except KeyboardInterrupt:
+        pass
+
+    finally:
+        node.destroy_node()
+
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

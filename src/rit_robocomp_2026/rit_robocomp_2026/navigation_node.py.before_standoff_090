@@ -1,0 +1,1337 @@
+import math
+import time
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist, PoseStamped
+from nav_msgs.msg import Odometry
+from std_msgs.msg import String, Int32
+from sensor_msgs.msg import LaserScan, JointState
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+
+class NavigationNode(Node):
+    def __init__(self):
+        super().__init__('navigation_node')
+
+        self.declare_parameter('shelf_standoff_distance', 0.65)
+        self.declare_parameter('bin_standoff_distance', 0.65)
+        self.declare_parameter('minimum_target_distance', 0.50)
+        self.declare_parameter('obstacle_stop_distance', 0.30)
+        self.declare_parameter('target_timeout', 0.75)
+        self.declare_parameter('target_acquisition_timeout', 2.0)
+        self.declare_parameter('approach_target_acquisition_timeout', 8.0)
+        self.declare_parameter('book_center_min', 280)
+        self.declare_parameter('book_center_max', 360)
+        self.declare_parameter('book_bbox_stop_height', 0)
+        self.declare_parameter('book_head_down_y', 300)
+        self.declare_parameter('book_head_down_pitch', -0.4)
+        self.declare_parameter('search_angular_speed', -0.15)
+
+        self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.head_trajectory_pub = self.create_publisher(
+            JointTrajectory,
+            '/head_controller/joint_trajectory',
+            10
+        )
+        self.status_pub = self.create_publisher(
+            String,
+            '/rit/navigation/status',
+            10
+        )
+        self.joint_state_sub = self.create_subscription(
+             JointState,
+             '/joint_states',
+            self.joint_state_callback,
+            10
+        )
+        self.odom_sub = self.create_subscription(
+            Odometry,
+            '/odom',
+            self.odom_callback,
+            10
+        )
+
+        self.manipulation_sub = self.create_subscription(
+            String,
+            '/rit/manipulation/status',
+            self.manipulation_status_callback,
+            10
+        )
+
+        self.command_sub = self.create_subscription(
+            String,
+            '/rit/navigation/command',
+            self.command_callback,
+            10
+        )
+
+        self.front_scan_sub = self.create_subscription(
+            LaserScan,
+            '/scan_front_raw',
+            self.front_scan_callback,
+            10
+        )
+
+        self.rear_scan_sub = self.create_subscription(
+            LaserScan,
+            '/scan_rear_raw',
+            self.rear_scan_callback,
+            10
+        )
+        self.shelf_column_sub = self.create_subscription(
+            Int32,
+            '/erc/shelf_column_identification',
+            self.shelf_column_callback,
+            10
+        )
+
+        self.book_target_sub = self.create_subscription(
+            PoseStamped,
+            '/rit/perception/book_target',
+            self.book_target_callback,
+            10
+        )
+        self.book_pixel_x_sub = self.create_subscription(
+            Int32,
+            '/rit/perception/book_pixel_x',
+            self.book_pixel_x_callback,
+            10
+        )
+        self.book_pixel_y_sub = self.create_subscription(
+            Int32,
+            '/rit/perception/book_pixel_y',
+            self.book_pixel_y_callback,
+            10
+        )
+        self.book_bbox_height_sub = self.create_subscription(
+            Int32,
+            '/rit/perception/book_bbox_height',
+            self.book_bbox_height_callback,
+            10
+        )
+        self.bin_target_sub = self.create_subscription(
+            PoseStamped,
+            '/rit/perception/bin_target',
+            self.bin_target_callback,
+            10
+        )
+        self.last_book_target_time = None
+        self.last_bin_target_time = None
+        self.target_timeout = float(self.get_parameter('target_timeout').value)
+        self.target_acquisition_timeout = float(
+            self.get_parameter('target_acquisition_timeout').value
+        )
+
+        self.front_min_range = None
+        self.rear_min_range = None
+        self.shelf_lidar_offset = None
+        self.approach_target_wait_start = None
+        self.approach_target_acquisition_timeout = float(
+            self.get_parameter('approach_target_acquisition_timeout').value
+        )
+        self.obstacle_stop_distance = float(
+            self.get_parameter('obstacle_stop_distance').value
+        )
+
+        self.last_odom_time = None
+        self.last_front_scan_time = None
+        self.last_rear_scan_time = None
+        self.sensor_timeout = 1.0
+
+        self.left_arm_joints = [
+            'arm_left_1_joint',
+            'arm_left_2_joint',
+            'arm_left_3_joint',
+            'arm_left_4_joint',
+            'arm_left_5_joint',
+            'arm_left_6_joint',
+            'arm_left_7_joint',
+        ]
+
+        self.right_arm_joints = [
+            'arm_right_1_joint',
+            'arm_right_2_joint',
+            'arm_right_3_joint',
+            'arm_right_4_joint',
+            'arm_right_5_joint',
+            'arm_right_6_joint',
+            'arm_right_7_joint',
+        ]
+
+        self.left_tuck_target = [
+           0.36,
+           -1.83,
+            0.47,
+            -2.35,
+            0.0,
+            -1.5463,
+            0.0,
+        ]
+
+        self.right_tuck_target = [
+            -0.36,
+            -1.83,
+            -0.47,
+            -2.35,
+            0.0,
+            -1.5569,
+            0.0,
+        ]
+
+        self.arm_tuck_tolerance = 0.08
+
+        self.joint_positions = {}
+        self.arms_tucked = False
+
+        self.current_x = None
+        self.current_y = None
+        self.current_yaw = None
+
+        self.start_x = None
+        self.start_y = None
+        self.start_yaw = None
+        self.start_pose_recorded = False
+
+        self.last_manipulation_status_time = None
+        self.manipulation_status_timeout = 30.0
+
+        self.rotation_active = False
+        self.target_yaw = None
+
+        self.drive_active = False
+        self.drive_start_x = None
+        self.drive_start_y = None
+        self.drive_distance = None
+
+        self.strafe_active = False
+        self.strafe_start_x = None
+        self.strafe_start_y = None
+        self.strafe_distance = None
+
+        self.return_active = False
+        self.return_stage = None
+        self.align_shelf_active = False
+        self.align_bin_active = False
+        self.approach_shelf_active = False
+        self.search_shelf_active = False
+        self.search_bin_active = False
+        self.mock_shelf_lateral_error = 0.0
+        self.book_target_x = None
+        self.book_pixel_x = None
+        self.book_pixel_x_time = None
+        self.book_pixel_y = None
+        self.book_pixel_y_time = None
+        self.book_head_down_for_approach = False
+        # Per-signal reacquisition timers. A stale sample stops the base
+        # immediately, but timeout is measured from when that signal was
+        # actually lost, not from when the whole motion started.
+        self.target_loss_since = {}
+        self.book_bbox_height = None
+        self.book_bbox_height_time = None
+        self.book_center_min = int(self.get_parameter('book_center_min').value)
+        self.book_center_max = int(self.get_parameter('book_center_max').value)
+        self.book_bbox_stop_height = int(
+            self.get_parameter('book_bbox_stop_height').value
+        )
+        self.book_head_down_y = int(
+            self.get_parameter('book_head_down_y').value
+        )
+        self.book_head_down_pitch = float(
+            self.get_parameter('book_head_down_pitch').value
+        )
+        self.shelf_align_tolerance = 0.02
+        self.kp_shelf_align = 0.5
+        self.max_strafe_speed = 0.05
+
+        self.mock_bin_lateral_error = 0.0
+        self.bin_target_x = None
+        self.bin_align_tolerance = 0.02
+        self.kp_bin_align = 0.8
+
+        self.mock_shelf_distance_error = 0.0
+        self.mock_bin_distance_error = 0.0
+        self.shelf_standoff_distance = float(
+            self.get_parameter('shelf_standoff_distance').value
+        )
+        self.bin_standoff_distance = float(
+            self.get_parameter('bin_standoff_distance').value
+        )
+        self.minimum_target_distance = float(
+            self.get_parameter('minimum_target_distance').value
+        )
+        self.shelf_distance_tolerance = 0.03
+        self.bin_distance_tolerance = 0.04
+        self.kp_shelf_distance = 0.6
+        self.kp_bin_distance = 0.5
+        self.max_approach_speed = 0.08
+
+        self.mock_shelf_found = False
+        self.search_angular_speed = float(
+            self.get_parameter('search_angular_speed').value
+        )
+
+        self.mock_bin_found = False
+
+        self.active_command = None
+        self.motion_start_time = None
+        self.motion_timeout = 180.0
+
+        self.kp_angular = 0.8
+        self.max_angular_speed = 0.20
+        self.angle_tolerance = 0.03
+
+        self.kp_linear = 0.8
+        self.max_linear_speed = 0.10
+        self.distance_tolerance = 0.015
+
+        if self.book_center_min >= self.book_center_max:
+            raise ValueError('book_center_min must be less than book_center_max')
+        if self.minimum_target_distance >= self.shelf_standoff_distance:
+            raise ValueError(
+                'minimum_target_distance must be less than '
+                'shelf_standoff_distance'
+            )
+        if self.minimum_target_distance >= self.bin_standoff_distance:
+            raise ValueError(
+                'minimum_target_distance must be less than '
+                'bin_standoff_distance'
+            )
+
+        self.create_timer(0.05, self.control_loop)
+        self.create_timer(1.0, self.print_pose)
+
+        self.get_logger().info('Navigation node started')
+        self.publish_status('IDLE')
+        self.stop_robot()
+
+    def publish_status(self, status):
+        msg = String()
+        msg.data = status
+        self.status_pub.publish(msg)
+        self.get_logger().info(f'Status: {status}')
+
+    def joint_state_callback(self, msg):
+        for name, position in zip(msg.name, msg.position):
+            self.joint_positions[name] = position
+
+        left_ready = all(
+            name in self.joint_positions
+            for name in self.left_arm_joints
+        )
+
+        right_ready = all(
+            name in self.joint_positions
+            for name in self.right_arm_joints
+        )
+   
+        if not left_ready or not right_ready:
+            self.arms_tucked = False
+            return
+
+        left_tucked = all(
+            abs(self.joint_positions[name] - target)
+            <= self.arm_tuck_tolerance
+            for name, target in zip(
+                self.left_arm_joints,
+                self.left_tuck_target
+            )
+        )
+    
+        right_tucked = all(
+            abs(self.joint_positions[name] - target)
+            <= self.arm_tuck_tolerance
+            for name, target in zip(
+                self.right_arm_joints,
+                self.right_tuck_target
+            )
+        )
+
+        self.arms_tucked = (
+            left_tucked
+            and right_tucked
+        )
+    def shelf_column_callback(self, msg):
+        self.mock_shelf_found = True
+
+        self.get_logger().info(f'Shelf detected by perception: {msg.data}')
+    def odom_callback(self, msg):
+        self.last_odom_time = time.monotonic()
+
+        self.current_x = msg.pose.pose.position.x
+        self.current_y = msg.pose.pose.position.y
+
+        q = msg.pose.pose.orientation
+
+        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+
+        self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
+
+        if not self.start_pose_recorded:
+            self.start_x = self.current_x
+            self.start_y = self.current_y
+            self.start_yaw = self.current_yaw
+            self.start_pose_recorded = True
+
+    def manipulation_status_callback(self, msg):
+        self.last_manipulation_status_time = time.monotonic()
+
+        # JointState feedback is the only authority for arms_tucked. A success
+        # status is an orchestration event, not proof of the physical posture.
+        if msg.data.startswith('FAILED:TUCK_ARMS') and self.motion_active():
+            self.fail_motion('ARMS_NOT_TUCKED')
+    def valid_scan_minimum(self, msg, half_angle=None):
+        valid_ranges = []
+        for index, r in enumerate(msg.ranges):
+            if not math.isfinite(r):
+                continue
+            if not (msg.range_min <= r <= msg.range_max):
+                continue
+
+            if half_angle is not None:
+                angle = msg.angle_min + index * msg.angle_increment
+                if abs(angle) > half_angle:
+                    continue
+
+            valid_ranges.append(r)
+
+        if not valid_ranges:
+            return None
+
+        return min(valid_ranges)
+    def book_target_callback(self, msg):
+        x = msg.pose.position.x
+        y = msg.pose.position.y
+        if not math.isfinite(x) or not math.isfinite(y) or x <= 0.0:
+            self.get_logger().warning('Ignoring invalid book target')
+            return
+
+        self.last_book_target_time = time.monotonic()
+        self.book_target_x = x
+        self.mock_shelf_lateral_error = y
+
+        # Calibrate the relationship between the current front-laser range
+        # and the base-frame book x coordinate whenever both are fresh.
+        # This lets APPROACH_SHELF use CURRENT lidar if depth briefly drops,
+        # without ever commanding motion from an old 3D pose.
+        now = time.monotonic()
+        if (
+            self.front_min_range is not None
+            and self.last_front_scan_time is not None
+            and now - self.last_front_scan_time <= self.sensor_timeout
+        ):
+            self.shelf_lidar_offset = x - self.front_min_range
+
+        self.mock_shelf_distance_error = x - self.shelf_standoff_distance
+
+        self.get_logger().info(
+            f'Book target: '
+            f'x={x:.3f}, '
+            f'y={y:.3f}, '
+            f'distance_error={self.mock_shelf_distance_error:.3f}'
+        )
+
+    def book_pixel_x_callback(self, msg):
+        self.book_pixel_x = msg.data
+        self.book_pixel_x_time = time.monotonic()
+
+    def publish_head_pitch(self, pitch):
+        trajectory = JointTrajectory()
+        trajectory.joint_names = ['head_1_joint', 'head_2_joint']
+
+        point = JointTrajectoryPoint()
+        point.positions = [0.0, float(pitch)]
+        point.time_from_start.sec = 1
+
+        trajectory.points = [point]
+        self.head_trajectory_pub.publish(trajectory)
+
+    def restore_head_front(self, force=False):
+        if force or self.book_head_down_for_approach:
+            self.publish_head_pitch(0.0)
+            self.get_logger().info('Head -> FRONT')
+        self.book_head_down_for_approach = False
+
+    def maybe_tilt_head_for_book(self):
+        if not self.approach_shelf_active:
+            return
+        if self.book_pixel_y is None:
+            return
+        if (
+            self.book_pixel_y >= self.book_head_down_y
+            and not self.book_head_down_for_approach
+        ):
+            self.get_logger().info(
+                f'Book low in image: y={self.book_pixel_y}; '
+                f'tilting head to {self.book_head_down_pitch:.2f} rad'
+            )
+            self.publish_head_pitch(self.book_head_down_pitch)
+            self.book_head_down_for_approach = True
+
+    def book_pixel_y_callback(self, msg):
+        self.book_pixel_y = msg.data
+        self.book_pixel_y_time = time.monotonic()
+        self.maybe_tilt_head_for_book()
+
+    def book_bbox_height_callback(self, msg):
+        if msg.data <= 0:
+            return
+        self.book_bbox_height = msg.data
+        self.book_bbox_height_time = time.monotonic()
+
+    def bin_target_callback(self, msg):
+        x = msg.pose.position.x
+        y = msg.pose.position.y
+        if not math.isfinite(x) or not math.isfinite(y) or x <= 0.0:
+            self.get_logger().warning('Ignoring invalid bin target')
+            return
+
+        self.mock_bin_found = True
+        self.last_bin_target_time = time.monotonic()
+        self.bin_target_x = x
+        self.mock_bin_lateral_error = y
+        self.mock_bin_distance_error = x - self.bin_standoff_distance
+
+        self.get_logger().info(
+            f'Bin target: '
+            f'x={x:.3f}, '
+            f'y={y:.3f}, '
+            f'distance_error={self.mock_bin_distance_error:.3f}'
+        )
+    def front_scan_callback(self, msg):
+        self.last_front_scan_time = time.monotonic()
+        # Forward collision protection uses the frontal +/-45 degree sector.
+        # Side returns outside this corridor must not falsely block forward
+        # shelf approach. The 0.30 m stop distance itself is unchanged.
+        self.front_min_range = self.valid_scan_minimum(
+            msg,
+            math.radians(45.0),
+        )
+
+    def rear_scan_callback(self, msg):
+        self.last_rear_scan_time = time.monotonic()
+        self.rear_min_range = self.valid_scan_minimum(msg)
+
+    def command_callback(self, msg):
+        command = msg.data.strip().upper()
+
+        if command == 'STOP':
+            self.restore_head_front()
+            self.cancel_motion()
+            self.publish_status('STOPPED')
+
+        elif command == 'TEST_ROTATE_10':
+            self.start_relative_rotation(
+                math.radians(10.0),
+                command
+            )
+
+        elif command == 'TEST_FORWARD_10CM':
+            self.start_drive_distance(
+                0.10,
+                command
+            )
+
+        elif command == 'TEST_STRAFE_LEFT_10CM':
+            self.start_strafe_distance(
+                0.10,
+                command
+            )
+
+        elif command == 'TEST_STRAFE_RIGHT_10CM':
+            self.start_strafe_distance(
+                -0.10,
+                command
+            )
+
+        elif command == 'RETURN_TO_START':
+            self.start_return_to_start(command)
+
+        elif command == 'SEARCH_SHELF':
+            self.restore_head_front(force=True)
+            self.mock_shelf_found = False
+            self.start_search_shelf(command)
+
+        elif command == 'MOCK_SHELF_FOUND':
+            self.mock_shelf_found = True
+
+        elif command == 'MOCK_SHELF_NOT_FOUND':
+            self.mock_shelf_found = False
+
+        elif command == 'APPROACH_SHELF':
+            self.start_approach_shelf(command)
+
+        elif command == 'MOCK_SHELF_FAR':
+            self.mock_shelf_distance_error = 0.20
+            self.book_target_x = self.shelf_standoff_distance + 0.20
+            self.last_book_target_time = time.monotonic()
+
+        elif command == 'MOCK_SHELF_NEAR':
+            self.mock_shelf_distance_error = 0.02
+            self.book_target_x = self.shelf_standoff_distance + 0.02
+            self.last_book_target_time = time.monotonic()
+
+        elif command == 'ALIGN_SHELF':
+            self.start_align_shelf(command)
+
+        elif command == 'MOCK_SHELF_LEFT':
+            self.mock_shelf_lateral_error = 0.10
+            self.book_pixel_x = 200
+            self.book_pixel_x_time = time.monotonic()
+
+        elif command == 'MOCK_SHELF_RIGHT':
+            self.mock_shelf_lateral_error = -0.10
+            self.book_pixel_x = 440
+            self.book_pixel_x_time = time.monotonic()
+
+        elif command == 'MOCK_SHELF_CENTER':
+            self.mock_shelf_lateral_error = 0.0
+            self.book_pixel_x = 320
+            self.book_pixel_x_time = time.monotonic()
+
+        elif command == 'SEARCH_BIN':
+            self.restore_head_front(force=True)
+            self.start_search_bin(command)
+
+        elif command == 'MOCK_BIN_FOUND':
+            self.mock_bin_found = True
+
+        elif command == 'MOCK_BIN_NOT_FOUND':
+            self.mock_bin_found = False
+
+        elif command == 'ALIGN_BIN':
+            self.start_align_bin(command)
+
+        elif command == 'MOCK_BIN_LEFT':
+            self.mock_bin_lateral_error = 0.10
+            self.bin_target_x = self.bin_standoff_distance
+            self.last_bin_target_time = time.monotonic()
+
+        elif command == 'MOCK_BIN_RIGHT':
+            self.mock_bin_lateral_error = -0.10
+            self.bin_target_x = self.bin_standoff_distance
+            self.last_bin_target_time = time.monotonic()
+
+        elif command == 'MOCK_BIN_CENTER':
+            self.mock_bin_lateral_error = 0.0
+            self.bin_target_x = self.bin_standoff_distance
+            self.last_bin_target_time = time.monotonic()
+
+        else:
+            self.stop_robot()
+            self.publish_status(
+                f'FAILED:{command}:UNKNOWN_COMMAND'
+            )
+
+    def normalize_angle(self, angle):
+        while angle > math.pi:
+            angle -= 2.0 * math.pi
+
+        while angle < -math.pi:
+            angle += 2.0 * math.pi
+
+        return angle
+
+    def motion_active(self):
+        return (
+            self.rotation_active
+            or self.drive_active
+            or self.strafe_active
+            or self.return_active
+            or self.align_shelf_active
+            or self.align_bin_active
+            or self.approach_shelf_active
+            or self.search_shelf_active
+            or self.search_bin_active
+        )
+
+    def cancel_motion(self):
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+        self.return_active = False
+        self.return_stage = None
+        self.align_shelf_active = False
+        self.align_bin_active = False
+        self.approach_shelf_active = False
+        self.search_shelf_active = False
+        self.search_bin_active = False
+        self.active_command = None
+        self.motion_start_time = None
+        self.target_loss_since.clear()
+        self.stop_robot()
+
+    def fail_motion(self, reason):
+        command = self.active_command
+        self.cancel_motion()
+
+        if command is not None:
+            self.publish_status(
+                f'FAILED:{command}:{reason}'
+            )
+
+    def succeed_motion(self):
+        command = self.active_command
+        self.cancel_motion()
+
+        if command is not None:
+            self.publish_status(
+                f'SUCCEEDED:{command}'
+            )
+
+    def start_motion(self, command):
+        if not self.arms_tucked:
+            self.publish_status(
+                f'FAILED:{command}:ARMS_NOT_TUCKED'
+            )
+            self.stop_robot()
+            return False
+
+        if self.current_x is None or self.current_y is None:
+            self.publish_status(
+                f'FAILED:{command}:NO_ODOMETRY'
+            )
+            self.stop_robot()
+            return False
+
+        self.cancel_motion()
+        self.active_command = command
+        self.motion_start_time = time.monotonic()
+        self.publish_status(f'RUNNING:{command}')
+
+        return True
+
+    def target_is_fresh(self, timestamp):
+        return (
+            timestamp is not None
+            and time.monotonic() - timestamp <= self.target_timeout
+        )
+
+    def require_fresh_target(self, timestamp, label):
+        now = time.monotonic()
+
+        if self.target_is_fresh(timestamp):
+            # A fresh sample has been reacquired; forget any previous dropout.
+            self.target_loss_since.pop(label, None)
+            return True
+
+        # Never move on stale perception. Stop immediately, but measure the
+        # timeout from the moment THIS signal was lost. The previous logic used
+        # motion_start_time, so after an approach had been running for >2 s, a
+        # single ~0.75 s camera dropout caused an instant mission failure.
+        self.stop_robot()
+
+        loss_since = self.target_loss_since.get(label)
+        if loss_since is None:
+            self.target_loss_since[label] = now
+            return False
+
+        if now - loss_since >= self.target_acquisition_timeout:
+            self.target_loss_since.pop(label, None)
+            self.fail_motion(f'{label}_TARGET_TIMEOUT')
+
+        return False
+
+    def path_clear_for_x_command(self, command):
+        if abs(command) < 1e-6:
+            return True
+
+        now = time.monotonic()
+        if command > 0.0:
+            if (
+                self.last_front_scan_time is None
+                or now - self.last_front_scan_time > self.sensor_timeout
+            ):
+                self.fail_motion('FRONT_LIDAR_TIMEOUT')
+                return False
+            if (
+                self.front_min_range is not None
+                and self.front_min_range <= self.obstacle_stop_distance
+            ):
+                self.fail_motion('FRONT_OBSTACLE')
+                return False
+        else:
+            if (
+                self.last_rear_scan_time is None
+                or now - self.last_rear_scan_time > self.sensor_timeout
+            ):
+                self.fail_motion('REAR_LIDAR_TIMEOUT')
+                return False
+            if (
+                self.rear_min_range is not None
+                and self.rear_min_range <= self.obstacle_stop_distance
+            ):
+                self.fail_motion('REAR_OBSTACLE')
+                return False
+        return True
+
+    def start_relative_rotation(self, angle_radians, command):
+        if self.current_yaw is None:
+            self.publish_status(
+                f'FAILED:{command}:NO_ODOMETRY'
+            )
+            return
+
+        if not self.start_motion(command):
+            return
+
+        self.target_yaw = self.normalize_angle(
+            self.current_yaw + angle_radians
+        )
+
+        self.rotation_active = True
+
+    def start_drive_distance(self, distance, command):
+        if not self.start_motion(command):
+            return
+
+        self.drive_start_x = self.current_x
+        self.drive_start_y = self.current_y
+        self.drive_distance = distance
+        self.drive_active = True
+
+    def start_strafe_distance(self, distance, command):
+        if not self.start_motion(command):
+            return
+
+        self.strafe_start_x = self.current_x
+        self.strafe_start_y = self.current_y
+        self.strafe_distance = distance
+        self.strafe_active = True
+
+    def start_return_to_start(self, command):
+        if not self.start_pose_recorded:
+            self.publish_status(
+                f'FAILED:{command}:NO_START_POSE'
+            )
+            return
+
+        if not self.start_motion(command):
+            return
+
+        dx = self.start_x - self.current_x
+        dy = self.start_y - self.current_y
+
+        distance = math.sqrt(dx * dx + dy * dy)
+
+        self.return_active = True
+
+        if distance <= self.distance_tolerance:
+            self.target_yaw = self.start_yaw
+            self.return_stage = 'RESTORE_START_YAW'
+            self.rotation_active = True
+            return
+
+        self.target_yaw = math.atan2(dy, dx)
+        self.return_stage = 'ROTATE_TO_START'
+        self.rotation_active = True
+
+    def start_align_shelf(self, command):
+        if not self.start_motion(command):
+            return
+
+        self.align_shelf_active = True
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+
+    def shelf_align_control(self):
+        # Prefer image-space centering when the pixel target is fresh.  If the
+        # colored contour briefly disappears but the 3D book pose is still
+        # arriving, use the book y coordinate in base_footprint as a safe
+        # lateral fallback instead of failing the whole mission.
+        if self.target_is_fresh(self.book_pixel_x_time):
+            self.target_loss_since.pop('BOOK_LATERAL', None)
+
+            if self.book_center_min <= self.book_pixel_x <= self.book_center_max:
+                self.succeed_motion()
+                return
+
+            pixel_error = self.book_pixel_x - 320
+            y_command = -0.00025 * pixel_error
+        elif self.target_is_fresh(self.last_book_target_time):
+            self.target_loss_since.pop('BOOK_LATERAL', None)
+
+            lateral_error = self.mock_shelf_lateral_error
+            if abs(lateral_error) <= 0.05:
+                self.succeed_motion()
+                return
+
+            # base_footprint +y is left.  A book at +y requires the base to
+            # strafe +y so the relative book y moves toward zero.
+            y_command = self.kp_shelf_align * lateral_error
+        else:
+            self.require_fresh_target(None, 'BOOK_LATERAL')
+            return
+
+        y_command = max(
+            -self.max_strafe_speed,
+            min(self.max_strafe_speed, y_command)
+        )
+
+        source = (
+            f'PIXEL x={self.book_pixel_x}'
+            if self.target_is_fresh(self.book_pixel_x_time)
+            else f'3D y={self.mock_shelf_lateral_error:.3f}'
+        )
+        self.get_logger().info(
+            f'ALIGN_SHELF control: {source}, y_cmd={y_command:.3f}'
+        )
+
+        twist = Twist()
+        twist.linear.y = y_command
+        self.cmd_vel_pub.publish(twist)
+
+    def start_align_bin(self, command):
+        if not self.start_motion(command):
+            return
+
+        self.align_bin_active = True
+        self.align_shelf_active = False
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+
+    def bin_align_control(self):
+        if not self.require_fresh_target(
+            self.last_bin_target_time,
+            'BIN',
+        ):
+            return
+
+        if self.bin_target_x < self.minimum_target_distance:
+            self.fail_motion('BIN_TARGET_TOO_CLOSE')
+            return
+
+        lateral_error = self.mock_bin_lateral_error
+        distance_error = self.bin_target_x - self.bin_standoff_distance
+        lateral_ready = abs(lateral_error) <= self.bin_align_tolerance
+        distance_ready = abs(distance_error) <= self.bin_distance_tolerance
+
+        if lateral_ready and distance_ready:
+            self.succeed_motion()
+            return
+
+        y_command = self.kp_bin_align * lateral_error
+        y_command = max(
+            -self.max_strafe_speed,
+            min(self.max_strafe_speed, y_command)
+        )
+        x_command = self.kp_bin_distance * distance_error
+        x_command = max(
+            -self.max_approach_speed,
+            min(self.max_approach_speed, x_command)
+        )
+
+        if distance_ready:
+            x_command = 0.0
+        if lateral_ready:
+            y_command = 0.0
+        if not self.path_clear_for_x_command(x_command):
+            return
+
+        msg = Twist()
+        msg.linear.x = x_command
+        msg.linear.y = y_command
+        self.cmd_vel_pub.publish(msg)
+
+    def start_approach_shelf(self, command):
+        if not self.start_motion(command):
+            return
+
+        # Start a dedicated reacquisition window for APPROACH_SHELF.
+        # Do not alter SEARCH_SHELF or ALIGN_SHELF behavior.
+        self.approach_target_wait_start = time.monotonic()
+
+        # If the final aligned 3D target and front laser are both recent,
+        # preserve only their geometric offset.  The fallback below always
+        # uses the CURRENT laser range, never a stale book pose.
+        now = time.monotonic()
+        if (
+            self.book_target_x is not None
+            and self.last_book_target_time is not None
+            and now - self.last_book_target_time <= self.target_acquisition_timeout
+            and self.front_min_range is not None
+            and self.last_front_scan_time is not None
+            and now - self.last_front_scan_time <= self.sensor_timeout
+        ):
+            self.shelf_lidar_offset = self.book_target_x - self.front_min_range
+
+        self.approach_shelf_active = True
+        self.align_shelf_active = False
+        self.align_bin_active = False
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+
+        # If the selected book is already near the bottom of the image when
+        # approach begins, react immediately instead of waiting for another
+        # camera callback.
+        if self.target_is_fresh(self.book_pixel_y_time):
+            self.maybe_tilt_head_for_book()
+
+    def approach_shelf_control(self):
+        now = time.monotonic()
+        book_target_fresh = self.target_is_fresh(self.last_book_target_time)
+        pixel_target_fresh = self.target_is_fresh(self.book_pixel_x_time)
+
+        # Prefer the live 3D book pose.  If depth/TF briefly drops, estimate
+        # the book x distance from CURRENT lidar plus the offset learned from
+        # the last valid 3D observation.  If neither is available, STOP and
+        # wait for reacquisition instead of moving blindly.
+        if book_target_fresh:
+            distance_x = self.book_target_x
+            self.approach_target_wait_start = now
+        elif (
+            self.shelf_lidar_offset is not None
+            and self.front_min_range is not None
+            and self.last_front_scan_time is not None
+            and now - self.last_front_scan_time <= self.sensor_timeout
+        ):
+            distance_x = self.front_min_range + self.shelf_lidar_offset
+        else:
+            self.stop_robot()
+            if self.approach_target_wait_start is None:
+                self.approach_target_wait_start = now
+            if (
+                now - self.approach_target_wait_start
+                >= self.approach_target_acquisition_timeout
+            ):
+                self.fail_motion('BOOK_TARGET_TIMEOUT')
+            return
+
+        # Lateral guidance can come from either the camera pixel or the fresh
+        # base-frame 3D pose.  Do not make book_pixel_x a single point of
+        # failure when the precise 3D target is still valid.
+        if pixel_target_fresh:
+            self.target_loss_since.pop('BOOK_LATERAL', None)
+            pixel_error = self.book_pixel_x - 320
+            horizontal_ready = (
+                self.book_center_min <= self.book_pixel_x <= self.book_center_max
+            )
+            y_command = -0.00025 * pixel_error
+        elif book_target_fresh:
+            self.target_loss_since.pop('BOOK_LATERAL', None)
+            lateral_error = self.mock_shelf_lateral_error
+            horizontal_ready = abs(lateral_error) <= 0.05
+            y_command = self.kp_shelf_align * lateral_error
+        else:
+            self.require_fresh_target(None, 'BOOK_LATERAL')
+            return
+
+        if distance_x is None or not math.isfinite(distance_x):
+            self.stop_robot()
+            return
+
+        if distance_x < self.minimum_target_distance:
+            self.fail_motion('BOOK_TARGET_TOO_CLOSE')
+            return
+
+        distance_error = distance_x - self.shelf_standoff_distance
+        distance_ready = abs(distance_error) <= self.shelf_distance_tolerance
+
+        if (
+            self.book_bbox_stop_height > 0
+            and self.target_is_fresh(self.book_bbox_height_time)
+            and self.book_bbox_height >= self.book_bbox_stop_height
+            and not distance_ready
+        ):
+            self.fail_motion('BOOK_VISUAL_STOP')
+            return
+
+        if distance_ready and horizontal_ready:
+            self.succeed_motion()
+            return
+
+        x_command = self.kp_shelf_distance * distance_error
+        x_command = max(
+            -self.max_approach_speed,
+            min(self.max_approach_speed, x_command)
+        )
+        y_command = max(
+            -self.max_strafe_speed,
+            min(self.max_strafe_speed, y_command)
+        )
+
+        if distance_ready:
+            x_command = 0.0
+        if horizontal_ready:
+            y_command = 0.0
+        if not self.path_clear_for_x_command(x_command):
+            return
+
+        msg = Twist()
+        msg.linear.x = x_command
+        msg.linear.y = y_command
+        self.cmd_vel_pub.publish(msg)
+
+    def start_search_shelf(self, command):
+        if not self.start_motion(command):
+            return
+
+        self.search_shelf_active = True
+        self.approach_shelf_active = False
+        self.align_shelf_active = False
+        self.align_bin_active = False
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+
+    def search_shelf_control(self):
+        if self.mock_shelf_found:
+            self.search_shelf_active = False
+            self.stop_robot()
+            self.succeed_motion()
+            return
+
+        msg = Twist()
+        msg.angular.z = self.search_angular_speed
+        self.cmd_vel_pub.publish(msg)
+
+    def start_search_bin(self, command):
+        if not self.start_motion(command):
+            return
+
+        self.search_bin_active = True
+        self.search_shelf_active = False
+        self.approach_shelf_active = False
+        self.align_shelf_active = False
+        self.align_bin_active = False
+        self.rotation_active = False
+        self.drive_active = False
+        self.strafe_active = False
+
+    def search_bin_control(self):
+        if self.mock_bin_found:
+            self.search_bin_active = False
+            self.stop_robot()
+            self.succeed_motion()
+            return
+
+        msg = Twist()
+        msg.angular.z = self.search_angular_speed
+        self.cmd_vel_pub.publish(msg)
+
+    def control_loop(self):
+        if not self.motion_active():
+            return
+
+        if self.motion_start_time is not None:
+            if time.monotonic() - self.motion_start_time > self.motion_timeout:
+                self.fail_motion('TIMEOUT')
+                return
+
+        if not self.arms_tucked:
+            self.fail_motion('ARMS_NOT_TUCKED')
+            return
+
+        if (
+            self.last_odom_time is None
+            or time.monotonic() - self.last_odom_time > self.sensor_timeout
+        ):
+            self.fail_motion('ODOMETRY_TIMEOUT')
+            return
+
+        if (
+            self.current_x is None
+            or self.current_y is None
+            or self.current_yaw is None
+        ):
+            self.fail_motion('NO_ODOMETRY')
+            return
+
+        if self.rotation_active:
+            self.rotation_control()
+
+        elif self.drive_active:
+            self.drive_control()
+
+        elif self.strafe_active:
+            self.strafe_control()
+
+        elif self.align_shelf_active:
+            self.shelf_align_control()
+
+        elif self.align_bin_active:
+            self.bin_align_control()
+
+        elif self.approach_shelf_active:
+            self.approach_shelf_control()
+
+        elif self.search_shelf_active:
+            self.search_shelf_control()
+
+        elif self.search_bin_active:
+            self.search_bin_control()
+
+    def rotation_control(self):
+        error = self.normalize_angle(
+            self.target_yaw - self.current_yaw
+        )
+
+        if abs(error) <= self.angle_tolerance:
+            self.rotation_active = False
+            self.stop_robot()
+
+            if self.return_active:
+                if self.return_stage == 'ROTATE_TO_START':
+                    dx = self.start_x - self.current_x
+                    dy = self.start_y - self.current_y
+
+                    self.drive_start_x = self.current_x
+                    self.drive_start_y = self.current_y
+                    self.drive_distance = math.sqrt(
+                        dx * dx + dy * dy
+                    )
+
+                    self.return_stage = 'DRIVE_TO_START'
+                    self.drive_active = True
+                    return
+
+                if self.return_stage == 'RESTORE_START_YAW':
+                    self.return_active = False
+                    self.return_stage = None
+                    self.succeed_motion()
+                    return
+
+            self.succeed_motion()
+            return
+
+        command = self.kp_angular * error
+
+        command = max(
+            -self.max_angular_speed,
+            min(self.max_angular_speed, command)
+        )
+
+        msg = Twist()
+        msg.angular.z = command
+        self.cmd_vel_pub.publish(msg)
+
+    def drive_control(self):
+        now = time.monotonic()
+
+        if self.drive_distance > 0.0:
+            if (
+                self.last_front_scan_time is None
+                or now - self.last_front_scan_time > self.sensor_timeout
+            ):
+                self.fail_motion('FRONT_LIDAR_TIMEOUT')
+                return
+
+            if (
+                self.front_min_range is not None
+                and self.front_min_range < self.obstacle_stop_distance
+            ):
+                self.fail_motion('FRONT_OBSTACLE')
+                return
+
+        elif self.drive_distance < 0.0:
+            if (
+                self.last_rear_scan_time is None
+                or now - self.last_rear_scan_time > self.sensor_timeout
+            ):
+                self.fail_motion('REAR_LIDAR_TIMEOUT')
+                return
+
+            if (
+                self.rear_min_range is not None
+                and self.rear_min_range < self.obstacle_stop_distance
+            ):
+                self.fail_motion('REAR_OBSTACLE')
+                return
+
+        dx = self.current_x - self.drive_start_x
+        dy = self.current_y - self.drive_start_y
+
+        travelled = math.sqrt(dx * dx + dy * dy)
+        error = abs(self.drive_distance) - travelled
+
+        if error <= self.distance_tolerance:
+            self.drive_active = False
+            self.stop_robot()
+
+            if (
+                self.return_active
+                and self.return_stage == 'DRIVE_TO_START'
+            ):
+                self.target_yaw = self.start_yaw
+                self.return_stage = 'RESTORE_START_YAW'
+                self.rotation_active = True
+                return
+
+            self.succeed_motion()
+            return
+
+        command = min(
+            self.kp_linear * error,
+            self.max_linear_speed
+        )
+
+        if self.drive_distance < 0.0:
+            command = -command
+
+        msg = Twist()
+        msg.linear.x = command
+        self.cmd_vel_pub.publish(msg)
+
+    def strafe_control(self):
+        dx = self.current_x - self.strafe_start_x
+        dy = self.current_y - self.strafe_start_y
+
+        travelled = math.sqrt(dx * dx + dy * dy)
+        error = abs(self.strafe_distance) - travelled
+
+        if error <= self.distance_tolerance:
+            self.succeed_motion()
+            return
+
+        command = min(
+            self.kp_linear * error,
+            self.max_linear_speed
+        )
+
+        if self.strafe_distance < 0.0:
+            command = -command
+
+        msg = Twist()
+        msg.linear.y = command
+        self.cmd_vel_pub.publish(msg)
+
+    def print_pose(self):
+        if self.current_yaw is None:
+            return
+
+        self.get_logger().info(
+            f'Pose: x={self.current_x:.3f}, '
+            f'y={self.current_y:.3f}, '
+            f'yaw={self.current_yaw:.3f}, '
+            f'arms_tucked={self.arms_tucked}'
+        )
+
+    def stop_robot(self):
+        if rclpy.ok():
+            self.cmd_vel_pub.publish(Twist())
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = NavigationNode()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            node.stop_robot()
+
+        node.destroy_node()
+
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

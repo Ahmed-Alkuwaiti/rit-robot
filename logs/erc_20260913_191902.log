@@ -1,0 +1,825 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-09-13-15-19-03-356698-Tek-3459
+[INFO] [launch]: Default logging verbosity is set to INFO
+[simulation.launch] REPRODUCIBLE_SCENE_SEED=23
+[simulation.launch] 30 contact bridges configured
+[INFO] [perception_node-6]: process started with pid [3470]
+[INFO] [manipulation_node-7]: process started with pid [3472]
+[INFO] [navigation_node-8]: process started with pid [3474]
+[INFO] [task_manager-9]: process started with pid [3476]
+[INFO] [gz-1]: process started with pid [3460]
+[INFO] [robot_state_publisher-2]: process started with pid [3462]
+[INFO] [parameter_bridge-3]: process started with pid [3464]
+[INFO] [parameter_bridge-4]: process started with pid [3466]
+[INFO] [parameter_bridge-5]: process started with pid [3468]
+[parameter_bridge-3] [INFO] [1789312743.646489269] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.648787274] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.652047600] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom (gz.msgs.Odometry) -> /odom (nav_msgs/msg/Odometry)] (Lazy 0)
+[robot_state_publisher-2] [INFO] [1789312743.652215661] [robot_state_publisher]: got segment arm_left_1_link
+[robot_state_publisher-2] [INFO] [1789312743.652318777] [robot_state_publisher]: got segment arm_left_2_link
+[robot_state_publisher-2] [INFO] [1789312743.652325072] [robot_state_publisher]: got segment arm_left_3_link
+[robot_state_publisher-2] [INFO] [1789312743.652327532] [robot_state_publisher]: got segment arm_left_4_link
+[robot_state_publisher-2] [INFO] [1789312743.652329862] [robot_state_publisher]: got segment arm_left_5_link
+[robot_state_publisher-2] [INFO] [1789312743.652332258] [robot_state_publisher]: got segment arm_left_6_link
+[robot_state_publisher-2] [INFO] [1789312743.652334571] [robot_state_publisher]: got segment arm_left_7_link
+[robot_state_publisher-2] [INFO] [1789312743.652337000] [robot_state_publisher]: got segment arm_left_tool_link
+[robot_state_publisher-2] [INFO] [1789312743.652339457] [robot_state_publisher]: got segment arm_right_1_link
+[robot_state_publisher-2] [INFO] [1789312743.652341811] [robot_state_publisher]: got segment arm_right_2_link
+[robot_state_publisher-2] [INFO] [1789312743.652344157] [robot_state_publisher]: got segment arm_right_3_link
+[robot_state_publisher-2] [INFO] [1789312743.652346436] [robot_state_publisher]: got segment arm_right_4_link
+[robot_state_publisher-2] [INFO] [1789312743.652348803] [robot_state_publisher]: got segment arm_right_5_link
+[robot_state_publisher-2] [INFO] [1789312743.652351077] [robot_state_publisher]: got segment arm_right_6_link
+[robot_state_publisher-2] [INFO] [1789312743.652353422] [robot_state_publisher]: got segment arm_right_7_link
+[robot_state_publisher-2] [INFO] [1789312743.652355763] [robot_state_publisher]: got segment arm_right_tool_link
+[robot_state_publisher-2] [INFO] [1789312743.652358198] [robot_state_publisher]: got segment base_antenna_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652360841] [robot_state_publisher]: got segment base_antenna_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652363604] [robot_state_publisher]: got segment base_dock_link
+[robot_state_publisher-2] [INFO] [1789312743.652366021] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-2] [INFO] [1789312743.652371231] [robot_state_publisher]: got segment base_front_laser_link
+[robot_state_publisher-2] [INFO] [1789312743.652374163] [robot_state_publisher]: got segment base_imu_link
+[robot_state_publisher-2] [INFO] [1789312743.652376713] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1789312743.652379023] [robot_state_publisher]: got segment base_rear_laser_link
+[robot_state_publisher-2] [INFO] [1789312743.652381561] [robot_state_publisher]: got segment eye_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652383945] [robot_state_publisher]: got segment eye_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652386328] [robot_state_publisher]: got segment gripper_left_base_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652389426] [robot_state_publisher]: got segment gripper_left_base_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652391681] [robot_state_publisher]: got segment gripper_left_base_link
+[robot_state_publisher-2] [INFO] [1789312743.652394332] [robot_state_publisher]: got segment gripper_left_fingertip_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652396645] [robot_state_publisher]: got segment gripper_left_fingertip_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652398899] [robot_state_publisher]: got segment gripper_left_grasping_link
+[robot_state_publisher-2] [INFO] [1789312743.652401396] [robot_state_publisher]: got segment gripper_left_inner_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652404259] [robot_state_publisher]: got segment gripper_left_inner_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652406691] [robot_state_publisher]: got segment gripper_left_outer_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652409088] [robot_state_publisher]: got segment gripper_left_outer_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652411877] [robot_state_publisher]: got segment gripper_left_screw_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652414212] [robot_state_publisher]: got segment gripper_left_screw_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652416578] [robot_state_publisher]: got segment gripper_right_base_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652418758] [robot_state_publisher]: got segment gripper_right_base_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652420968] [robot_state_publisher]: got segment gripper_right_base_link
+[robot_state_publisher-2] [INFO] [1789312743.652424611] [robot_state_publisher]: got segment gripper_right_fingertip_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652428638] [robot_state_publisher]: got segment gripper_right_fingertip_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652433535] [robot_state_publisher]: got segment gripper_right_grasping_link
+[robot_state_publisher-2] [INFO] [1789312743.652438718] [robot_state_publisher]: got segment gripper_right_inner_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652442237] [robot_state_publisher]: got segment gripper_right_inner_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652472201] [robot_state_publisher]: got segment gripper_right_outer_finger_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652475817] [robot_state_publisher]: got segment gripper_right_outer_finger_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652478197] [robot_state_publisher]: got segment gripper_right_screw_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652480643] [robot_state_publisher]: got segment gripper_right_screw_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652483129] [robot_state_publisher]: got segment head_1_link
+[robot_state_publisher-2] [INFO] [1789312743.652485752] [robot_state_publisher]: got segment head_2_link
+[robot_state_publisher-2] [INFO] [1789312743.652488115] [robot_state_publisher]: got segment head_front_camera_accel_frame
+[robot_state_publisher-2] [INFO] [1789312743.652490393] [robot_state_publisher]: got segment head_front_camera_accel_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652496110] [robot_state_publisher]: got segment head_front_camera_bottom_screw_frame
+[robot_state_publisher-2] [INFO] [1789312743.652499207] [robot_state_publisher]: got segment head_front_camera_color_eye_frame
+[robot_state_publisher-2] [INFO] [1789312743.652501696] [robot_state_publisher]: got segment head_front_camera_color_frame
+[robot_state_publisher-2] [INFO] [1789312743.652504005] [robot_state_publisher]: got segment head_front_camera_color_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652506315] [robot_state_publisher]: got segment head_front_camera_depth_frame
+[robot_state_publisher-2] [INFO] [1789312743.652508580] [robot_state_publisher]: got segment head_front_camera_depth_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652510949] [robot_state_publisher]: got segment head_front_camera_gyro_frame
+[robot_state_publisher-2] [INFO] [1789312743.652513346] [robot_state_publisher]: got segment head_front_camera_gyro_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652516220] [robot_state_publisher]: got segment head_front_camera_infra1_frame
+[robot_state_publisher-2] [INFO] [1789312743.652518636] [robot_state_publisher]: got segment head_front_camera_infra1_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652521209] [robot_state_publisher]: got segment head_front_camera_infra2_frame
+[robot_state_publisher-2] [INFO] [1789312743.652524134] [robot_state_publisher]: got segment head_front_camera_infra2_optical_frame
+[robot_state_publisher-2] [INFO] [1789312743.652526497] [robot_state_publisher]: got segment head_front_camera_link
+[robot_state_publisher-2] [INFO] [1789312743.652528960] [robot_state_publisher]: got segment head_screen_link
+[robot_state_publisher-2] [INFO] [1789312743.652531301] [robot_state_publisher]: got segment sellion_link
+[robot_state_publisher-2] [INFO] [1789312743.652534334] [robot_state_publisher]: got segment suspension_front_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652537880] [robot_state_publisher]: got segment suspension_front_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652540759] [robot_state_publisher]: got segment suspension_rear_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652543894] [robot_state_publisher]: got segment suspension_rear_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652546288] [robot_state_publisher]: got segment torso_arm_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652548788] [robot_state_publisher]: got segment torso_arm_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652551345] [robot_state_publisher]: got segment torso_base_link
+[robot_state_publisher-2] [INFO] [1789312743.652553770] [robot_state_publisher]: got segment torso_fixed_column_link
+[robot_state_publisher-2] [INFO] [1789312743.652556003] [robot_state_publisher]: got segment torso_head_link
+[robot_state_publisher-2] [INFO] [1789312743.652558275] [robot_state_publisher]: got segment torso_lift_link
+[robot_state_publisher-2] [INFO] [1789312743.652561906] [robot_state_publisher]: got segment virtual_base_laser_link
+[robot_state_publisher-2] [INFO] [1789312743.652565152] [robot_state_publisher]: got segment wheel_front_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652570645] [robot_state_publisher]: got segment wheel_front_right_link
+[robot_state_publisher-2] [INFO] [1789312743.652578644] [robot_state_publisher]: got segment wheel_rear_left_link
+[robot_state_publisher-2] [INFO] [1789312743.652581510] [robot_state_publisher]: got segment wheel_rear_right_link
+[parameter_bridge-3] [INFO] [1789312743.655010886] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom_tf (gz.msgs.Pose_V) -> /odom_tf (tf2_msgs/msg/TFMessage)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.657380115] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan_front_raw (gz.msgs.LaserScan) -> /scan_front_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.660445232] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan_rear_raw (gz.msgs.LaserScan) -> /scan_rear_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.662685321] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/base_imu (gz.msgs.IMU) -> /base_imu (sensor_msgs/msg/Imu)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1789312743.664041553] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/erc_collection_bin/link/collection_bin_base_link/sensor/bin_contact_sensor/contact (gz.msgs.Contacts) -> /world/erc_world/model/erc_collection_bin/link/collection_bin_base_link/sensor/bin_contact_sensor/contact (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[task_manager-9] [0m[INFO] [1789312743.723913181] [task_manager]: WAITING_FOR_READY[0m
+[task_manager-9] [0m[INFO] [1789312743.816765745] [task_manager]: WAITING_FOR_READY: clock, navigation:heartbeat, navigation:expected_one_command_subscriber, manipulation:heartbeat, manipulation:expected_one_command_subscriber, perception:heartbeat, perception:expected_one_command_subscriber[0m
+[gz-1] QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+[manipulation_node-7] [0m[INFO] [1789312743.853371937] [manipulation_node]: Kinematics and collision geometry verified: /opt/erc_ws/install/erc_description/share/erc_description/urdf/tiago_pro.urdf[0m
+[task_manager-9] [0m[INFO] [1789312743.965049550] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": false, "reason": "clock, navigation:heartbeat, navigation:expected_one_command_subscriber, manipulation:heartbeat, perception:heartbeat, perception:expected_one_command_subscriber", "active": "WAITING_FOR_READY", "sim_time": 0.0, "clock_progress_age_wall": 0.25105501699999877}[0m
+[manipulation_node-7] [0m[INFO] [1789312744.065168441] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": false, "reason": "WAITING_FOR_FRESH_JOINTS", "active": "IDLE:IDLE", "sim_time": 0.0, "clock_progress_age_wall": 0.25155399499999476}[0m
+[parameter_bridge-3] [INFO] [1789312744.093085593] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[perception_node-6] [0m[INFO] [1789312744.243905478] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": false, "reason": "waiting for synchronized camera and TF", "active": "BOOK:waiting for synchronized camera and TF", "sim_time": 0.0, "clock_progress_age_wall": 0.25261941799999477}[0m
+[navigation_node-8] [0m[INFO] [1789312744.354536950] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": false, "reason": "ODOMETRY_NOT_FRESH", "active": "IDLE", "sim_time": 0.0, "clock_progress_age_wall": 0.25127430699922115}[0m
+[parameter_bridge-4] [INFO] [1789312744.637040262] [head_camera_bridge]: Creating GZ->ROS Bridge: [/head_front_camera/depth/image (gz.msgs.Image) -> /head_front_camera/head_front_camera/color/image_raw (sensor_msgs/msg/Image)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1789312744.639845937] [head_camera_bridge]: Creating GZ->ROS Bridge: [/head_front_camera/depth/camera_info (gz.msgs.CameraInfo) -> /head_front_camera/head_front_camera/color/camera_info (sensor_msgs/msg/CameraInfo)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1789312744.640259783] [head_camera_bridge]: Creating GZ->ROS Bridge: [/head_front_camera/depth/depth_image (gz.msgs.Image) -> /head_front_camera/head_front_camera/depth/image_rect_raw (sensor_msgs/msg/Image)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1789312744.640562532] [head_camera_bridge]: Creating GZ->ROS Bridge: [/head_front_camera/depth/camera_info (gz.msgs.CameraInfo) -> /head_front_camera/head_front_camera/depth/camera_info (sensor_msgs/msg/CameraInfo)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.640857340] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/base_footprint/sensor/base_footprint_contact/contact (gz.msgs.Contacts) -> /contacts/base_footprint (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.642303678] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/torso_lift_link/sensor/torso_lift_link_contact/contact (gz.msgs.Contacts) -> /contacts/torso_lift_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.642732679] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/head_1_link/sensor/head_1_link_contact/contact (gz.msgs.Contacts) -> /contacts/head_1_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.643129226] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/head_2_link/sensor/head_2_link_contact/contact (gz.msgs.Contacts) -> /contacts/head_2_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.643388632] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_1_link/sensor/arm_left_1_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_1_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.643593146] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_2_link/sensor/arm_left_2_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_2_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.643801928] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_3_link/sensor/arm_left_3_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_3_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.644077513] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_4_link/sensor/arm_left_4_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_4_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.644483544] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_5_link/sensor/arm_left_5_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_5_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.644846435] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_6_link/sensor/arm_left_6_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_6_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.645228081] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_left_7_link/sensor/arm_left_7_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_left_7_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.645570332] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_1_link/sensor/arm_right_1_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_1_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.645948416] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_2_link/sensor/arm_right_2_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_2_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.646314490] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_3_link/sensor/arm_right_3_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_3_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.646676772] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_4_link/sensor/arm_right_4_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_4_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.647053813] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_5_link/sensor/arm_right_5_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_5_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.647452276] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_6_link/sensor/arm_right_6_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_6_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.647825872] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/arm_right_7_link/sensor/arm_right_7_link_contact/contact (gz.msgs.Contacts) -> /contacts/arm_right_7_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.648198429] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_fingertip_left_link/sensor/gripper_left_fingertip_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_fingertip_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.648574520] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_fingertip_right_link/sensor/gripper_left_fingertip_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_fingertip_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.648961051] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_inner_finger_left_link/sensor/gripper_left_inner_finger_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_inner_finger_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.649320041] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_inner_finger_right_link/sensor/gripper_left_inner_finger_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_inner_finger_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.649676355] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_outer_finger_left_link/sensor/gripper_left_outer_finger_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_outer_finger_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.650052515] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_left_outer_finger_right_link/sensor/gripper_left_outer_finger_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_left_outer_finger_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.650427284] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_fingertip_left_link/sensor/gripper_right_fingertip_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_fingertip_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.650790007] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_fingertip_right_link/sensor/gripper_right_fingertip_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_fingertip_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.651152854] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_inner_finger_left_link/sensor/gripper_right_inner_finger_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_inner_finger_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.651510191] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_inner_finger_right_link/sensor/gripper_right_inner_finger_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_inner_finger_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.651865998] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_outer_finger_left_link/sensor/gripper_right_outer_finger_left_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_outer_finger_left_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-5] [INFO] [1789312744.652222875] [contact_bridge]: Creating GZ->ROS Bridge: [/world/erc_world/model/tiago_pro/link/gripper_right_outer_finger_right_link/sensor/gripper_right_outer_finger_right_link_contact/contact (gz.msgs.Contacts) -> /contacts/gripper_right_outer_finger_right_link (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[INFO] [create-10]: process started with pid [3700]
+[create-10] [INFO] [1789312746.640014647] [ros_gz_sim]: Requesting list of world names.
+[create-10] [INFO] [1789312746.841558844] [ros_gz_sim]: Waiting messages on topic [robot_description].
+[create-10] [INFO] [1789312746.844967065] [ros_gz_sim]: Requested creation of entity.
+[create-10] [INFO] [1789312746.845004788] [ros_gz_sim]: OK creation of entity.
+[task_manager-9] [0m[INFO] [1789312746.916982587] [task_manager]: WAITING_FOR_READY: navigation:ODOMETRY_NOT_FRESH, manipulation:WAITING_FOR_FRESH_JOINTS, perception:waiting for synchronized camera and TF[0m
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_front_laser"]/gz_frame_id:<urdf-string>:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_imu_sensor"]/imu/noise:<urdf-string>:L0]: XML Element[noise], child of element[imu], not defined in SDF. Copying[noise] as children of [imu].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_rear_laser"]/gz_frame_id:<urdf-string>:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/joint[@name="arm_left_7_joint"]/physics/ode/provide_feedback:<urdf-string>:L0]: XML Element[provide_feedback], child of element[ode], not defined in SDF. Copying[provide_feedback] as children of [ode].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/joint[@name="arm_right_7_joint"]/physics/ode/provide_feedback:<urdf-string>:L0]: XML Element[provide_feedback], child of element[ode], not defined in SDF. Copying[provide_feedback] as children of [ode].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera"]/gz_frame_id:<urdf-string>:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera"]/camera[@name="head_front_camera"]/vertical_fov:<urdf-string>:L0]: XML Element[vertical_fov], child of element[camera], not defined in SDF. Copying[vertical_fov] as children of [camera].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_frame_depth_sensor"]/gz_frame_id:<urdf-string>:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_frame_depth_sensor"]/camera[@name="rgbd_camera_frame"]/vertical_fov:<urdf-string>:L0]: XML Element[vertical_fov], child of element[camera], not defined in SDF. Copying[vertical_fov] as children of [camera].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_imu_sensor"]/gz_frame_id:<urdf-string>:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_imu_sensor"]/imu/noise:<urdf-string>:L0]: XML Element[noise], child of element[imu], not defined in SDF. Copying[noise] as children of [imu].
+[INFO] [create-10]: process has finished cleanly [pid 3700]
+[gz-1] [INFO] [1789312747.049549957] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_state_publisher
+[gz-1] [INFO] [1789312747.049574484] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_description
+[gz-1] [INFO] [1789312747.057796954] [gz_ros2_control]: connected to service!! robot_state_publisher asking for robot_description
+[gz-1] [INFO] [1789312747.059249658] [gz_ros2_control]: Received URDF from param server
+[gz-1] [INFO] [1789312747.085007522] [gz_ros2_control]: The position_proportional_gain has been set to: 0.1
+[gz-1] [INFO] [1789312747.085564874] [gz_ros2_control]: Loading joint: torso_lift_joint
+[gz-1] [INFO] [1789312747.085656418] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.085675232] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.085776174] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.085826028] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.085849804] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.085859006] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086210902] [gz_ros2_control]: Loading joint: head_1_joint
+[gz-1] [INFO] [1789312747.086222717] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086227768] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086232430] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086251789] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086261656] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086266989] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086327653] [gz_ros2_control]: Loading joint: head_2_joint
+[gz-1] [INFO] [1789312747.086335688] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086341228] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086346439] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086351107] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086357257] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086362530] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086387742] [gz_ros2_control]: Loading joint: arm_left_1_joint
+[gz-1] [INFO] [1789312747.086393071] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086398091] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086402983] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086407233] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086411877] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086416502] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086439110] [gz_ros2_control]: Loading joint: arm_left_2_joint
+[gz-1] [INFO] [1789312747.086444817] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086450033] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086453441] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086456519] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086459692] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086462748] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086477609] [gz_ros2_control]: Loading joint: arm_left_3_joint
+[gz-1] [INFO] [1789312747.086481400] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086484811] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086487975] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086492495] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086495774] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086498756] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086512108] [gz_ros2_control]: Loading joint: arm_left_4_joint
+[gz-1] [INFO] [1789312747.086515729] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086518738] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086522055] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086525111] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086528385] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086531362] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086544527] [gz_ros2_control]: Loading joint: arm_left_5_joint
+[gz-1] [INFO] [1789312747.086548272] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086551539] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086554585] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086557573] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086560574] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086563415] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086576717] [gz_ros2_control]: Loading joint: arm_left_6_joint
+[gz-1] [INFO] [1789312747.086581645] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086584565] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086587518] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086590493] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086622061] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086625855] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086639936] [gz_ros2_control]: Loading joint: arm_left_7_joint
+[gz-1] [INFO] [1789312747.086644005] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086647043] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086650066] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086653285] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086656224] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086659006] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086672145] [gz_ros2_control]: Loading joint: gripper_left_finger_joint
+[gz-1] [INFO] [1789312747.086676405] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086679537] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086697897] [gz_ros2_control]: 			 found initial value: 0.000000
+[gz-1] [INFO] [1789312747.086705764] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.086709090] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.086714411] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086717483] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.086735888] [gz_ros2_control]: Loading joint: gripper_left_outer_finger_right_joint
+[gz-1] [INFO] [1789312747.086862420] [gz_ros2_control]: Joint 'gripper_left_outer_finger_right_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.086964826] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.086970660] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.086987010] [gz_ros2_control]: Loading joint: gripper_left_inner_finger_right_joint
+[gz-1] [INFO] [1789312747.086994899] [gz_ros2_control]: Joint 'gripper_left_inner_finger_right_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087026287] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087030011] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087043934] [gz_ros2_control]: Loading joint: gripper_left_fingertip_right_joint
+[gz-1] [INFO] [1789312747.087050724] [gz_ros2_control]: Joint 'gripper_left_fingertip_right_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: 8.28
+[gz-1] [INFO] [1789312747.087056735] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087060934] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087073227] [gz_ros2_control]: Loading joint: gripper_left_finger_right_joint
+[gz-1] [INFO] [1789312747.087080642] [gz_ros2_control]: Joint 'gripper_left_finger_right_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: 0.22
+[gz-1] [INFO] [1789312747.087084333] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087087638] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087099383] [gz_ros2_control]: Loading joint: gripper_left_outer_finger_left_joint
+[gz-1] [INFO] [1789312747.087105850] [gz_ros2_control]: Joint 'gripper_left_outer_finger_left_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087111890] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087116036] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087132994] [gz_ros2_control]: Loading joint: gripper_left_inner_finger_left_joint
+[gz-1] [INFO] [1789312747.087138647] [gz_ros2_control]: Joint 'gripper_left_inner_finger_left_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087142130] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087146680] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087159311] [gz_ros2_control]: Loading joint: gripper_left_fingertip_left_joint
+[gz-1] [INFO] [1789312747.087165600] [gz_ros2_control]: Joint 'gripper_left_fingertip_left_joint'is mimicking joint 'gripper_left_finger_joint' with multiplier: 8.28
+[gz-1] [INFO] [1789312747.087170738] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087174757] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087187510] [gz_ros2_control]: Loading joint: arm_right_1_joint
+[gz-1] [INFO] [1789312747.087194837] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087198333] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087201679] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087204892] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087209567] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087223734] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087246002] [gz_ros2_control]: Loading joint: arm_right_2_joint
+[gz-1] [INFO] [1789312747.087251449] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087254730] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087258156] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087261237] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087264469] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087267319] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087280976] [gz_ros2_control]: Loading joint: arm_right_3_joint
+[gz-1] [INFO] [1789312747.087284811] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087288491] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087293661] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087301308] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087304832] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087309997] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087327660] [gz_ros2_control]: Loading joint: arm_right_4_joint
+[gz-1] [INFO] [1789312747.087333753] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087338083] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087342570] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087347708] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087352708] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087356984] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087378611] [gz_ros2_control]: Loading joint: arm_right_5_joint
+[gz-1] [INFO] [1789312747.087384442] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087389104] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087393768] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087398140] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087403064] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087407493] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087427238] [gz_ros2_control]: Loading joint: arm_right_6_joint
+[gz-1] [INFO] [1789312747.087431625] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087434917] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087438003] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087441125] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087444178] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087447227] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087466049] [gz_ros2_control]: Loading joint: arm_right_7_joint
+[gz-1] [INFO] [1789312747.087472135] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087478859] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087482547] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087485793] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087490053] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087494501] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087511788] [gz_ros2_control]: Loading joint: gripper_right_finger_joint
+[gz-1] [INFO] [1789312747.087518282] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087523200] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087527881] [gz_ros2_control]: 			 found initial value: 0.000000
+[gz-1] [INFO] [1789312747.087533909] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087538887] [gz_ros2_control]: 		 effort
+[gz-1] [INFO] [1789312747.087543939] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087547238] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087567067] [gz_ros2_control]: Loading joint: gripper_right_outer_finger_right_joint
+[gz-1] [INFO] [1789312747.087575492] [gz_ros2_control]: Joint 'gripper_right_outer_finger_right_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087579927] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087583049] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087594139] [gz_ros2_control]: Loading joint: gripper_right_inner_finger_right_joint
+[gz-1] [INFO] [1789312747.087599982] [gz_ros2_control]: Joint 'gripper_right_inner_finger_right_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087605950] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087610596] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087619762] [gz_ros2_control]: Loading joint: gripper_right_fingertip_right_joint
+[gz-1] [INFO] [1789312747.087630399] [gz_ros2_control]: Joint 'gripper_right_fingertip_right_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: 8.28
+[gz-1] [INFO] [1789312747.087635641] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087639644] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087658199] [gz_ros2_control]: Loading joint: gripper_right_finger_right_joint
+[gz-1] [INFO] [1789312747.087665535] [gz_ros2_control]: Joint 'gripper_right_finger_right_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: 0.22
+[gz-1] [INFO] [1789312747.087669243] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087672274] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087682798] [gz_ros2_control]: Loading joint: gripper_right_outer_finger_left_joint
+[gz-1] [INFO] [1789312747.087689317] [gz_ros2_control]: Joint 'gripper_right_outer_finger_left_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087692811] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087695785] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087708032] [gz_ros2_control]: Loading joint: gripper_right_inner_finger_left_joint
+[gz-1] [INFO] [1789312747.087713676] [gz_ros2_control]: Joint 'gripper_right_inner_finger_left_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: -8.28
+[gz-1] [INFO] [1789312747.087717092] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087720679] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087730592] [gz_ros2_control]: Loading joint: gripper_right_fingertip_left_joint
+[gz-1] [INFO] [1789312747.087737111] [gz_ros2_control]: Joint 'gripper_right_fingertip_left_joint'is mimicking joint 'gripper_right_finger_joint' with multiplier: 8.28
+[gz-1] [INFO] [1789312747.087740754] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087743724] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087753566] [gz_ros2_control]: Loading joint: wheel_front_right_joint
+[gz-1] [INFO] [1789312747.087757222] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087761922] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087765863] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087768958] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087780320] [gz_ros2_control]: Loading joint: wheel_front_left_joint
+[gz-1] [INFO] [1789312747.087786393] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087790096] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087799524] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087803111] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087813285] [gz_ros2_control]: Loading joint: wheel_rear_right_joint
+[gz-1] [INFO] [1789312747.087819584] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087823404] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087826499] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087829641] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.087838960] [gz_ros2_control]: Loading joint: wheel_rear_left_joint
+[gz-1] [INFO] [1789312747.087842627] [gz_ros2_control]: 	State:
+[gz-1] [INFO] [1789312747.087845485] [gz_ros2_control]: 		 position
+[gz-1] [INFO] [1789312747.087848451] [gz_ros2_control]: 		 velocity
+[gz-1] [INFO] [1789312747.087855758] [gz_ros2_control]: 	Command:
+[gz-1] [INFO] [1789312747.089410761] [gz_ros2_control]: Loading sensor: base_imu_sensor
+[gz-1] [INFO] [1789312747.089439393] [gz_ros2_control]: 	State:
+[gz-1] [WARN] [1789312747.089466620] [gz_ros2_control]: IMU sensor 'base_imu_sensor' not found in hardware_info, skipping.
+[gz-1] [INFO] [1789312747.089492160] [gz_ros2_control]: Loading sensor: head_front_camera_imu_sensor
+[gz-1] [INFO] [1789312747.089496240] [gz_ros2_control]: 	State:
+[gz-1] [WARN] [1789312747.089499756] [gz_ros2_control]: IMU sensor 'head_front_camera_imu_sensor' not found in hardware_info, skipping.
+[gz-1] [INFO] [1789312747.089725385] [resource_manager]: Initialize hardware 'ros2_control_gazebo_system' 
+[gz-1] [INFO] [1789312747.090117616] [resource_manager]: Successful initialization of hardware 'ros2_control_gazebo_system'
+[gz-1] [INFO] [1789312747.090210964] [resource_manager]: 'configure' hardware 'ros2_control_gazebo_system' 
+[gz-1] [INFO] [1789312747.090213898] [gz_ros2_control]: System Successfully configured!
+[gz-1] [INFO] [1789312747.090224746] [resource_manager]: Successful 'configure' of hardware 'ros2_control_gazebo_system'
+[gz-1] [INFO] [1789312747.090247945] [resource_manager]: 'activate' hardware 'ros2_control_gazebo_system' 
+[gz-1] [INFO] [1789312747.090252804] [resource_manager]: Successful 'activate' of hardware 'ros2_control_gazebo_system'
+[gz-1] [INFO] [1789312747.090261062] [gz_ros2_control]: Loading controller_manager
+[gz-1] [1;31m[Err] [Physics.cc:1906] [0m[1;31mAttempting to create a mimic constraint for joint [[0m[1;31mgripper_left_inner_finger_left_joint[0m[1;31m] but the chosen physics engine does not support [0m[1;31mmimic constraints, so no constraint will be [0m[1;31mcreated.[0m[1;31m[0m
+[gz-1] [WARN] [1789312747.232618142] [gz_ros2_control]:  Desired controller update period (0.004 s) is slower than the gazebo simulation period (0.002 s).
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_front_laser"]/gz_frame_id:<data-string>:L416]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_imu_sensor"]/imu/noise:<data-string>:L423]: XML Element[noise], child of element[imu], not defined in SDF. Copying[noise] as children of [imu].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="base_footprint"]/sensor[@name="base_rear_laser"]/gz_frame_id:<data-string>:L467]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/joint[@name="arm_left_7_joint"]/physics/ode/provide_feedback:<data-string>:L1488]: XML Element[provide_feedback], child of element[ode], not defined in SDF. Copying[provide_feedback] as children of [ode].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/joint[@name="arm_right_7_joint"]/physics/ode/provide_feedback:<data-string>:L2822]: XML Element[provide_feedback], child of element[ode], not defined in SDF. Copying[provide_feedback] as children of [ode].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera"]/camera[@name="head_front_camera"]/vertical_fov:<data-string>:L3830]: XML Element[vertical_fov], child of element[camera], not defined in SDF. Copying[vertical_fov] as children of [camera].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera"]/gz_frame_id:<data-string>:L3837]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_frame_depth_sensor"]/camera[@name="rgbd_camera_frame"]/vertical_fov:<data-string>:L3858]: XML Element[vertical_fov], child of element[camera], not defined in SDF. Copying[vertical_fov] as children of [camera].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_frame_depth_sensor"]/gz_frame_id:<data-string>:L3865]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_imu_sensor"]/imu/noise:<data-string>:L3872]: XML Element[noise], child of element[imu], not defined in SDF. Copying[noise] as children of [imu].
+[gz-1] [1;33mWarning [Utils.cc:132][0m [/sdf/model[@name="tiago_pro"]/link[@name="head_2_link"]/sensor[@name="head_front_camera_imu_sensor"]/gz_frame_id:<data-string>:L3889]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].
+[INFO] [create-11]: process started with pid [3820]
+[INFO] [create-12]: process started with pid [3822]
+[INFO] [create-13]: process started with pid [3824]
+[INFO] [create-14]: process started with pid [3826]
+[INFO] [create-15]: process started with pid [3828]
+[INFO] [create-16]: process started with pid [3830]
+[INFO] [create-17]: process started with pid [3832]
+[INFO] [create-18]: process started with pid [3834]
+[INFO] [create-19]: process started with pid [3838]
+[INFO] [create-20]: process started with pid [3842]
+[INFO] [create-21]: process started with pid [3846]
+[INFO] [create-22]: process started with pid [3848]
+[INFO] [create-23]: process started with pid [3856]
+[INFO] [create-24]: process started with pid [3858]
+[INFO] [create-25]: process started with pid [3860]
+[INFO] [create-26]: process started with pid [3862]
+[INFO] [create-27]: process started with pid [3868]
+[INFO] [create-28]: process started with pid [3915]
+[INFO] [create-29]: process started with pid [4022]
+[INFO] [create-30]: process started with pid [4086]
+[INFO] [create-31]: process started with pid [4108]
+[INFO] [create-32]: process started with pid [4111]
+[INFO] [create-33]: process started with pid [4115]
+[INFO] [create-34]: process started with pid [4130]
+[INFO] [create-35]: process started with pid [4153]
+[create-11] [INFO] [1789312748.681152822] [ros_gz_sim]: Requesting list of world names.
+[create-12] [INFO] [1789312748.671761074] [ros_gz_sim]: Requesting list of world names.
+[create-13] [INFO] [1789312748.662906678] [ros_gz_sim]: Requesting list of world names.
+[create-14] [INFO] [1789312748.713500835] [ros_gz_sim]: Requesting list of world names.
+[create-15] [INFO] [1789312748.678123802] [ros_gz_sim]: Requesting list of world names.
+[create-16] [INFO] [1789312748.674974466] [ros_gz_sim]: Requesting list of world names.
+[create-17] [INFO] [1789312748.687575137] [ros_gz_sim]: Requesting list of world names.
+[create-18] [INFO] [1789312748.670286297] [ros_gz_sim]: Requesting list of world names.
+[create-19] [INFO] [1789312748.697544753] [ros_gz_sim]: Requesting list of world names.
+[create-20] [INFO] [1789312748.673707106] [ros_gz_sim]: Requesting list of world names.
+[create-21] [INFO] [1789312748.698121369] [ros_gz_sim]: Requesting list of world names.
+[create-22] [INFO] [1789312748.726558856] [ros_gz_sim]: Requesting list of world names.
+[create-23] [INFO] [1789312748.680273307] [ros_gz_sim]: Requesting list of world names.
+[create-24] [INFO] [1789312748.699501979] [ros_gz_sim]: Requesting list of world names.
+[create-25] [INFO] [1789312748.667978056] [ros_gz_sim]: Requesting list of world names.
+[create-26] [INFO] [1789312748.678781971] [ros_gz_sim]: Requesting list of world names.
+[create-27] [INFO] [1789312748.760583224] [ros_gz_sim]: Requesting list of world names.
+[create-28] [INFO] [1789312748.779564204] [ros_gz_sim]: Requesting list of world names.
+[create-30] [INFO] [1789312748.786137919] [ros_gz_sim]: Requesting list of world names.
+[create-29] [INFO] [1789312748.828359961] [ros_gz_sim]: Requesting list of world names.
+[create-32] [INFO] [1789312748.839993747] [ros_gz_sim]: Requesting list of world names.
+[create-31] [INFO] [1789312748.843258137] [ros_gz_sim]: Requesting list of world names.
+[create-33] [INFO] [1789312748.850061021] [ros_gz_sim]: Requesting list of world names.
+[create-35] [INFO] [1789312748.863262411] [ros_gz_sim]: Requesting list of world names.
+[create-34] [INFO] [1789312748.872182730] [ros_gz_sim]: Requesting list of world names.
+[manipulation_node-7] [0m[INFO] [1789312749.564904320] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": false, "reason": "WAITING_FOR_FRESH_JOINTS", "active": "IDLE:IDLE", "sim_time": 1.846, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312749.964914103] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": false, "reason": "navigation:JOINT_STATE_NOT_FRESH, manipulation:WAITING_FOR_FRESH_JOINTS, perception:waiting for acquisition-time TF", "active": "WAITING_FOR_READY", "sim_time": 1.846, "clock_progress_age_wall": 0.2499932800001261}[0m
+[perception_node-6] [0m[INFO] [1789312749.977668342] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": false, "reason": "waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 1.846, "clock_progress_age_wall": 0.5001995660004468}[0m
+[task_manager-9] [0m[INFO] [1789312750.016587893] [task_manager]: WAITING_FOR_READY: navigation:JOINT_STATE_NOT_FRESH, manipulation:WAITING_FOR_FRESH_JOINTS, perception:waiting for acquisition-time TF[0m
+[navigation_node-8] [0m[INFO] [1789312750.587598847] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": false, "reason": "JOINT_STATE_NOT_FRESH", "active": "IDLE", "sim_time": 1.848, "clock_progress_age_wall": 0.5001524240005892}[0m
+[create-13] [INFO] [1789312750.776904734] [ros_gz_sim]: Requested creation of entity.
+[create-13] [INFO] [1789312750.776969007] [ros_gz_sim]: OK creation of entity.
+[INFO] [create-13]: process has finished cleanly [pid 3824]
+[create-35] [INFO] [1789312751.278179844] [ros_gz_sim]: Requested creation of entity.
+[create-35] [INFO] [1789312751.278246034] [ros_gz_sim]: OK creation of entity.
+[create-25] [INFO] [1789312751.278179506] [ros_gz_sim]: Requested creation of entity.
+[create-25] [INFO] [1789312751.278246038] [ros_gz_sim]: OK creation of entity.
+[create-27] [INFO] [1789312751.278196738] [ros_gz_sim]: Requested creation of entity.
+[create-27] [INFO] [1789312751.278253316] [ros_gz_sim]: OK creation of entity.
+[create-28] [INFO] [1789312751.278213204] [ros_gz_sim]: Requested creation of entity.
+[create-28] [INFO] [1789312751.278268258] [ros_gz_sim]: OK creation of entity.
+[create-22] [INFO] [1789312751.278228337] [ros_gz_sim]: Requested creation of entity.
+[create-22] [INFO] [1789312751.278276951] [ros_gz_sim]: OK creation of entity.
+[create-30] [INFO] [1789312751.278326915] [ros_gz_sim]: Requested creation of entity.
+[create-30] [INFO] [1789312751.278364449] [ros_gz_sim]: OK creation of entity.
+[create-11] [INFO] [1789312751.278324863] [ros_gz_sim]: Requested creation of entity.
+[create-11] [INFO] [1789312751.278377787] [ros_gz_sim]: OK creation of entity.
+[create-12] [INFO] [1789312751.278448534] [ros_gz_sim]: Requested creation of entity.
+[create-12] [INFO] [1789312751.278484773] [ros_gz_sim]: OK creation of entity.
+[create-15] [INFO] [1789312751.278546246] [ros_gz_sim]: Requested creation of entity.
+[create-15] [INFO] [1789312751.278590708] [ros_gz_sim]: OK creation of entity.
+[create-18] [INFO] [1789312751.278550805] [ros_gz_sim]: Requested creation of entity.
+[create-18] [INFO] [1789312751.278589024] [ros_gz_sim]: OK creation of entity.
+[create-16] [INFO] [1789312751.278667085] [ros_gz_sim]: Requested creation of entity.
+[create-16] [INFO] [1789312751.278723114] [ros_gz_sim]: OK creation of entity.
+[create-19] [INFO] [1789312751.278752045] [ros_gz_sim]: Requested creation of entity.
+[create-19] [INFO] [1789312751.278870316] [ros_gz_sim]: OK creation of entity.
+[create-33] [INFO] [1789312751.278757145] [ros_gz_sim]: Requested creation of entity.
+[create-33] [INFO] [1789312751.278871044] [ros_gz_sim]: OK creation of entity.
+[create-21] [INFO] [1789312751.278813879] [ros_gz_sim]: Requested creation of entity.
+[create-21] [INFO] [1789312751.278868161] [ros_gz_sim]: OK creation of entity.
+[create-20] [INFO] [1789312751.279134620] [ros_gz_sim]: Requested creation of entity.
+[create-20] [INFO] [1789312751.279173926] [ros_gz_sim]: OK creation of entity.
+[create-23] [INFO] [1789312751.279290211] [ros_gz_sim]: Requested creation of entity.
+[create-23] [INFO] [1789312751.279329034] [ros_gz_sim]: OK creation of entity.
+[create-29] [INFO] [1789312751.279355700] [ros_gz_sim]: Requested creation of entity.
+[create-29] [INFO] [1789312751.279399022] [ros_gz_sim]: OK creation of entity.
+[create-34] [INFO] [1789312751.279574847] [ros_gz_sim]: Requested creation of entity.
+[create-34] [INFO] [1789312751.279670459] [ros_gz_sim]: OK creation of entity.
+[create-24] [INFO] [1789312751.279641738] [ros_gz_sim]: Requested creation of entity.
+[create-24] [INFO] [1789312751.279704990] [ros_gz_sim]: OK creation of entity.
+[create-32] [INFO] [1789312751.279648139] [ros_gz_sim]: Requested creation of entity.
+[create-32] [INFO] [1789312751.279699331] [ros_gz_sim]: OK creation of entity.
+[create-26] [INFO] [1789312751.280340441] [ros_gz_sim]: Requested creation of entity.
+[create-26] [INFO] [1789312751.280383650] [ros_gz_sim]: OK creation of entity.
+[create-14] [INFO] [1789312751.280427446] [ros_gz_sim]: Requested creation of entity.
+[create-14] [INFO] [1789312751.280473819] [ros_gz_sim]: OK creation of entity.
+[create-17] [INFO] [1789312751.280805776] [ros_gz_sim]: Requested creation of entity.
+[create-17] [INFO] [1789312751.280856907] [ros_gz_sim]: OK creation of entity.
+[create-31] [INFO] [1789312751.283092306] [ros_gz_sim]: Requested creation of entity.
+[create-31] [INFO] [1789312751.283181296] [ros_gz_sim]: OK creation of entity.
+[INFO] [create-35]: process has finished cleanly [pid 4153]
+[INFO] [create-11]: process has finished cleanly [pid 3820]
+[INFO] [create-21]: process has finished cleanly [pid 3846]
+[INFO] [create-27]: process has finished cleanly [pid 3868]
+[INFO] [create-18]: process has finished cleanly [pid 3834]
+[INFO] [create-30]: process has finished cleanly [pid 4086]
+[INFO] [create-22]: process has finished cleanly [pid 3848]
+[INFO] [create-25]: process has finished cleanly [pid 3860]
+[INFO] [create-28]: process has finished cleanly [pid 3915]
+[INFO] [create-26]: process has finished cleanly [pid 3862]
+[INFO] [create-19]: process has finished cleanly [pid 3838]
+[INFO] [create-15]: process has finished cleanly [pid 3828]
+[INFO] [create-32]: process has finished cleanly [pid 4111]
+[INFO] [create-17]: process has finished cleanly [pid 3832]
+[INFO] [create-31]: process has finished cleanly [pid 4108]
+[INFO] [create-33]: process has finished cleanly [pid 4115]
+[INFO] [create-12]: process has finished cleanly [pid 3822]
+[INFO] [create-20]: process has finished cleanly [pid 3842]
+[INFO] [create-24]: process has finished cleanly [pid 3858]
+[INFO] [create-23]: process has finished cleanly [pid 3856]
+[INFO] [create-34]: process has finished cleanly [pid 4130]
+[INFO] [create-16]: process has finished cleanly [pid 3830]
+[INFO] [create-29]: process has finished cleanly [pid 4022]
+[INFO] [create-14]: process has finished cleanly [pid 3826]
+[INFO] [spawner-36]: process started with pid [4245]
+[INFO] [spawner-37]: process started with pid [4247]
+[INFO] [spawner-38]: process started with pid [4249]
+[INFO] [spawner-39]: process started with pid [4251]
+[INFO] [spawner-40]: process started with pid [4253]
+[INFO] [spawner-41]: process started with pid [4255]
+[INFO] [spawner-42]: process started with pid [4257]
+[gz-1] [INFO] [1789312751.848633604] [controller_manager]: Loading controller 'joint_state_broadcaster'
+[spawner-41] [INFO] [1789312751.877442254] [spawner_gripper_left_controller_raw]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1mgripper_left_controller_raw[0m
+[gz-1] [INFO] [1789312752.583344667] [controller_manager]: Loading controller 'gripper_left_controller_raw'
+[spawner-36] [INFO] [1789312752.602388634] [spawner_joint_state_broadcaster]: [94mLoaded [1mjoint_state_broadcaster[0m
+[spawner-40] [INFO] [1789312752.606241505] [spawner_torso_controller]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1mtorso_controller[0m
+[INFO] [gripper_command_clamp.py-43]: process started with pid [4324]
+[spawner-38] [INFO] [1789312752.609420023] [spawner_arm_right_controller]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1marm_right_controller[0m
+[gz-1] [WARN] [1789312752.610461235] [gripper_left_controller_raw]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[spawner-37] [INFO] [1789312752.613493083] [spawner_arm_left_controller]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1marm_left_controller[0m
+[spawner-42] [INFO] [1789312752.623402134] [spawner_gripper_right_controller_raw]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1mgripper_right_controller_raw[0m
+[gz-1] [INFO] [1789312752.623414867] [controller_manager]: Loading controller 'arm_right_controller'
+[spawner-41] [INFO] [1789312752.625568902] [spawner_gripper_left_controller_raw]: [94mLoaded [1mgripper_left_controller_raw[0m
+[gz-1] [WARN] [1789312752.636228544] [arm_right_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[gz-1] [INFO] [1789312752.641963001] [controller_manager]: Loading controller 'arm_left_controller'
+[spawner-38] [INFO] [1789312752.642757950] [spawner_arm_right_controller]: [94mLoaded [1marm_right_controller[0m
+[gz-1] [WARN] [1789312752.656701240] [arm_left_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[gz-1] [INFO] [1789312752.668533763] [controller_manager]: Loading controller 'gripper_right_controller_raw'
+[spawner-37] [INFO] [1789312752.669479207] [spawner_arm_left_controller]: [94mLoaded [1marm_left_controller[0m
+[gz-1] [WARN] [1789312752.678679939] [gripper_right_controller_raw]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[gz-1] [INFO] [1789312752.680730686] [controller_manager]: Configuring controller 'joint_state_broadcaster'
+[gz-1] [INFO] [1789312752.680985778] [joint_state_broadcaster]: 'joints' or 'interfaces' parameter is empty. All available state interfaces will be published
+[spawner-42] [INFO] [1789312752.682381450] [spawner_gripper_right_controller_raw]: [94mLoaded [1mgripper_right_controller_raw[0m
+[gz-1] [INFO] [1789312752.698648085] [controller_manager]: Configuring controller 'gripper_left_controller_raw'
+[gz-1] [INFO] [1789312752.698916918] [gripper_left_controller_raw]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.698973044] [gripper_left_controller_raw]: Command interfaces are [position] and state interfaces are [position velocity].
+[gz-1] [INFO] [1789312752.699022825] [gripper_left_controller_raw]: Using 'splines' interpolation method.
+[gz-1] [INFO] [1789312752.700006160] [gripper_left_controller_raw]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.703880129] [gripper_left_controller_raw]: Action status changes will be monitored at 20.00 Hz.
+[spawner-39] [INFO] [1789312752.711302241] [spawner_head_controller]: [96mSetting controller param "params_file" to "['/opt/erc_ws/install/erc_bringup/share/erc_bringup/config/controller_params.yaml']" for [1mhead_controller[0m
+[gz-1] [INFO] [1789312752.717490050] [controller_manager]: Loading controller 'torso_controller'
+[gz-1] [WARN] [1789312752.727589145] [torso_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[gz-1] [INFO] [1789312752.735567303] [controller_manager]: Loading controller 'head_controller'
+[spawner-40] [INFO] [1789312752.737359975] [spawner_torso_controller]: [94mLoaded [1mtorso_controller[0m
+[gz-1] [WARN] [1789312752.751329803] [head_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[gz-1] [INFO] [1789312752.761499525] [controller_manager]: Configuring controller 'arm_right_controller'
+[gz-1] [INFO] [1789312752.762152172] [arm_right_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.762251553] [arm_right_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[gz-1] [INFO] [1789312752.762302866] [arm_right_controller]: Using 'splines' interpolation method.
+[spawner-39] [INFO] [1789312752.762337887] [spawner_head_controller]: [94mLoaded [1mhead_controller[0m
+[gz-1] [INFO] [1789312752.763380787] [arm_right_controller]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.767115010] [arm_right_controller]: Action status changes will be monitored at 20.00 Hz.
+[gz-1] [INFO] [1789312752.774137050] [controller_manager]: Configuring controller 'arm_left_controller'
+[gz-1] [INFO] [1789312752.774482729] [arm_left_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.774536493] [arm_left_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[gz-1] [INFO] [1789312752.774561736] [arm_left_controller]: Using 'splines' interpolation method.
+[gz-1] [INFO] [1789312752.776241353] [arm_left_controller]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.778645005] [arm_left_controller]: Action status changes will be monitored at 20.00 Hz.
+[gz-1] [INFO] [1789312752.787089943] [controller_manager]: Configuring controller 'gripper_right_controller_raw'
+[gz-1] [INFO] [1789312752.787270315] [gripper_right_controller_raw]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.787346685] [gripper_right_controller_raw]: Command interfaces are [position] and state interfaces are [position velocity].
+[gz-1] [INFO] [1789312752.787371721] [gripper_right_controller_raw]: Using 'splines' interpolation method.
+[gz-1] [INFO] [1789312752.787898954] [gripper_right_controller_raw]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.792408306] [gripper_right_controller_raw]: Action status changes will be monitored at 20.00 Hz.
+[gz-1] [INFO] [1789312752.802015988] [controller_manager]: Configuring controller 'torso_controller'
+[gz-1] [INFO] [1789312752.802288693] [torso_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.802345471] [torso_controller]: Command interfaces are [position] and state interfaces are [position].
+[gz-1] [INFO] [1789312752.802383692] [torso_controller]: Using 'splines' interpolation method.
+[gz-1] [INFO] [1789312752.803174856] [torso_controller]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.805985703] [torso_controller]: Action status changes will be monitored at 20.00 Hz.
+[gz-1] [INFO] [1789312752.814109918] [controller_manager]: Configuring controller 'head_controller'
+[gz-1] [INFO] [1789312752.814341411] [head_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gz-1] [INFO] [1789312752.814388952] [head_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[gz-1] [INFO] [1789312752.814415378] [head_controller]: Using 'splines' interpolation method.
+[gz-1] [INFO] [1789312752.815940000] [head_controller]: Controller state will be published at 50.00 Hz.
+[gz-1] [INFO] [1789312752.818631302] [head_controller]: Action status changes will be monitored at 20.00 Hz.
+[spawner-36] [INFO] [1789312752.847719521] [spawner_joint_state_broadcaster]: [92mConfigured and activated [1mjoint_state_broadcaster[0m
+[spawner-41] [INFO] [1789312752.873627071] [spawner_gripper_left_controller_raw]: [92mConfigured and activated [1mgripper_left_controller_raw[0m
+[spawner-38] [INFO] [1789312752.902035832] [spawner_arm_right_controller]: [92mConfigured and activated [1marm_right_controller[0m
+[gripper_command_clamp.py-43] [INFO] [1789312752.910173973] [gripper_command_clamp]: Gripper command clamp active for: gripper_left_controller, gripper_right_controller
+[spawner-37] [INFO] [1789312752.924824057] [spawner_arm_left_controller]: [92mConfigured and activated [1marm_left_controller[0m
+[spawner-42] [INFO] [1789312752.950295282] [spawner_gripper_right_controller_raw]: [92mConfigured and activated [1mgripper_right_controller_raw[0m
+[spawner-40] [INFO] [1789312752.975429569] [spawner_torso_controller]: [92mConfigured and activated [1mtorso_controller[0m
+[spawner-39] [INFO] [1789312752.998744714] [spawner_head_controller]: [92mConfigured and activated [1mhead_controller[0m
+[INFO] [spawner-36]: process has finished cleanly [pid 4245]
+[task_manager-9] [0m[INFO] [1789312753.117076917] [task_manager]: WAITING_FOR_READY: navigation:JOINT_STATE_NOT_FRESH, manipulation:WAITING_FOR_DEPTH_SCENE, perception:waiting for acquisition-time TF[0m
+[INFO] [spawner-38]: process has finished cleanly [pid 4249]
+[INFO] [spawner-41]: process has finished cleanly [pid 4255]
+[INFO] [spawner-42]: process has finished cleanly [pid 4257]
+[INFO] [spawner-37]: process has finished cleanly [pid 4247]
+[INFO] [spawner-40]: process has finished cleanly [pid 4253]
+[INFO] [spawner-39]: process has finished cleanly [pid 4251]
+[manipulation_node-7] [0m[INFO] [1789312755.566344982] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 3.0460000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312755.715683620] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "WAITING_FOR_READY", "sim_time": 3.1020000000000003, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312755.727451255] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 3.1060000000000003, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312756.337467874] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 3.3600000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312756.616714118] [task_manager]: RUNNING:TUCKING_ARMS[0m
+[task_manager-9] [0m[INFO] [1789312756.617693893] [task_manager]: MANIPULATION COMMAND {"id": "1542ab27229d:1", "command": "TUCK_ARMS"}[0m
+[manipulation_node-7] [0m[INFO] [1789312756.619763931] [manipulation_node]: ACCEPTED:TUCK_ARMS[0m
+[manipulation_node-7] [0m[INFO] [1789312756.621666718] [manipulation_node]: RUNNING:TUCK_ARMS[0m
+[manipulation_node-7] [0m[INFO] [1789312756.622250514] [manipulation_node]: STAGE TUCK_ARMS:TUCK_RAISE[0m
+[gz-1] [INFO] [1789312756.623322779] [torso_controller]: Received new action goal
+[gz-1] [INFO] [1789312756.623443674] [torso_controller]: Accepted new action goal
+[task_manager-9] [0m[INFO] [1789312756.716593749] [task_manager]: MISSION state=TUCKING_ARMS age_sim=0.0s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[task_manager-9] [0m[INFO] [1789312759.816284596] [task_manager]: MISSION state=TUCKING_ARMS age_sim=1.3s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[manipulation_node-7] [0m[INFO] [1789312761.316035617] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_RAISE", "sim_time": 5.390000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312761.714373855] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 5.562, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312761.727222612] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 5.566000000000001, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312762.087339465] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 5.712000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312762.916419465] [task_manager]: MISSION state=TUCKING_ARMS age_sim=2.6s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[task_manager-9] [0m[INFO] [1789312766.016145650] [task_manager]: MISSION state=TUCKING_ARMS age_sim=3.8s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[manipulation_node-7] [0m[INFO] [1789312767.065985866] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_RAISE", "sim_time": 7.750000000000001, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312767.477025802] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 7.916, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312767.714168278] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 8.016, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312767.836774001] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 8.07, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312769.016278989] [task_manager]: MISSION state=TUCKING_ARMS age_sim=5.1s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[gz-1] [INFO] [1789312769.424679938] [torso_controller]: Goal reached, success!
+[manipulation_node-7] [0m[INFO] [1789312769.532156946] [manipulation_node]: STAGE TUCK_ARMS:TUCK_ARMS[0m
+[gz-1] [INFO] [1789312769.533401819] [arm_left_controller]: Received new action goal
+[gz-1] [INFO] [1789312769.533510162] [arm_left_controller]: Accepted new action goal
+[gz-1] [INFO] [1789312769.534302692] [arm_right_controller]: Received new action goal
+[gz-1] [INFO] [1789312769.534378523] [arm_right_controller]: Accepted new action goal
+[task_manager-9] [0m[INFO] [1789312772.116081109] [task_manager]: MISSION state=TUCKING_ARMS age_sim=6.3s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[perception_node-6] [0m[INFO] [1789312772.480129293] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 9.940000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312772.714652839] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 10.040000000000001, "clock_progress_age_wall": 0.0}[0m
+[manipulation_node-7] [0m[INFO] [1789312773.066313702] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_ARMS", "sim_time": 10.180000000000001, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312773.586743931] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 10.4, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312775.216101971] [task_manager]: MISSION state=TUCKING_ARMS age_sim=7.6s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[task_manager-9] [0m[INFO] [1789312778.315683234] [task_manager]: MISSION state=TUCKING_ARMS age_sim=8.9s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[perception_node-6] [0m[INFO] [1789312778.477086608] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 12.418000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312778.714182747] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 12.514000000000001, "clock_progress_age_wall": 0.0}[0m
+[manipulation_node-7] [0m[INFO] [1789312778.815665500] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_ARMS", "sim_time": 12.558000000000002, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312779.336587456] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 12.780000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312781.415692614] [task_manager]: MISSION state=TUCKING_ARMS age_sim=10.1s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[perception_node-6] [0m[INFO] [1789312784.476190551] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 14.878, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312784.515556590] [task_manager]: MISSION state=TUCKING_ARMS age_sim=11.4s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[task_manager-9] [0m[INFO] [1789312784.713528623] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 14.974, "clock_progress_age_wall": 0.0}[0m
+[manipulation_node-7] [0m[INFO] [1789312784.814219684] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_ARMS", "sim_time": 15.018, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312785.085818097] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 15.132000000000001, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312787.615672965] [task_manager]: MISSION state=TUCKING_ARMS age_sim=12.7s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[gz-1] [INFO] [1789312789.031860825] [arm_right_controller]: Goal reached, success!
+[gz-1] [INFO] [1789312789.031933687] [arm_left_controller]: Goal reached, success!
+[manipulation_node-7] [0m[INFO] [1789312789.147513188] [manipulation_node]: STAGE TUCK_ARMS:TUCK_LOWER[0m
+[gz-1] [INFO] [1789312789.148342971] [torso_controller]: Received new action goal
+[gz-1] [INFO] [1789312789.148404835] [torso_controller]: Accepted new action goal
+[perception_node-6] [0m[INFO] [1789312789.976567010] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 17.134, "clock_progress_age_wall": 0.0}[0m
+[manipulation_node-7] [0m[INFO] [1789312790.065030061] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_LOWER", "sim_time": 17.17, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312790.713369414] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 17.444000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312790.715094132] [task_manager]: MISSION state=TUCKING_ARMS age_sim=14.0s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[navigation_node-8] [0m[INFO] [1789312790.836037299] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 17.496000000000002, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312793.815016560] [task_manager]: MISSION state=TUCKING_ARMS age_sim=15.2s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[manipulation_node-7] [0m[INFO] [1789312795.813598994] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_LOWER", "sim_time": 19.526, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312795.975401487] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 19.592000000000002, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312796.712998802] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "TUCKING_ARMS", "sim_time": 19.896, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312796.815450119] [task_manager]: MISSION state=TUCKING_ARMS age_sim=16.5s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[navigation_node-8] [0m[INFO] [1789312796.836054504] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "IDLE", "sim_time": 19.944000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312799.914816386] [task_manager]: MISSION state=TUCKING_ARMS age_sim=17.7s acked=True command=('manipulation', {'id': '1542ab27229d:1', 'command': 'TUCK_ARMS'})[0m
+[perception_node-6] [0m[INFO] [1789312800.975849218] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 21.634, "clock_progress_age_wall": 0.0}[0m
+[manipulation_node-7] [0m[INFO] [1789312801.064363476] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "TUCK_ARMS:TUCK_LOWER", "sim_time": 21.668000000000003, "clock_progress_age_wall": 0.0}[0m
+[gz-1] [INFO] [1789312801.396534514] [torso_controller]: Goal reached, success!
+[manipulation_node-7] [0m[INFO] [1789312801.510900614] [manipulation_node]: SUCCEEDED:TUCK_ARMS[0m
+[task_manager-9] [0m[INFO] [1789312801.511205797] [task_manager]: RUNNING:SEARCHING_SHELF[0m
+[task_manager-9] [0m[INFO] [1789312801.511951995] [task_manager]: PERCEPTION COMMAND {"id": "1542ab27229d:2", "command": "BOOK_RESET", "session": "1542ab27229d"}[0m
+[perception_node-6] [0m[INFO] [1789312801.512982703] [perception_node]: ACCEPTED:BOOK_RESET[0m
+[perception_node-6] [0m[INFO] [1789312801.513732232] [perception_node]: SUCCEEDED:BOOK_RESET[0m
+[task_manager-9] [0m[INFO] [1789312801.514234882] [task_manager]: NAVIGATION COMMAND {"id": "1542ab27229d:3", "command": "SEARCH_SHELF", "session": "1542ab27229d"}[0m
+[navigation_node-8] [0m[INFO] [1789312801.514826046] [navigation_node]: ACCEPTED:SEARCH_SHELF[0m
+[navigation_node-8] [0m[INFO] [1789312801.516323198] [navigation_node]: RUNNING:SEARCH_SHELF[0m
+[task_manager-9] [0m[INFO] [1789312802.462789475] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "SEARCHING_SHELF", "sim_time": 22.238000000000003, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312802.835695346] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "SEARCH_SHELF", "sim_time": 22.402, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312803.014720925] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=0.6s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[task_manager-9] [0m[INFO] [1789312806.015209348] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=1.8s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[manipulation_node-7] [0m[INFO] [1789312806.565500176] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 23.896, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312806.726108693] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "active": "BOOK:BOOK:NO_SEGMENTED_DEPTH_CANDIDATE", "sim_time": 23.96, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312808.712526628] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "SEARCHING_SHELF", "sim_time": 24.736, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312808.835526013] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "SEARCH_SHELF", "sim_time": 24.782, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312809.114878091] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=3.0s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[task_manager-9] [0m[INFO] [1789312812.114961914] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=4.3s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[manipulation_node-7] [0m[INFO] [1789312812.563430742] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 26.290000000000003, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312812.974627112] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "active": "BOOK:BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "sim_time": 26.448, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312814.212313350] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "SEARCHING_SHELF", "sim_time": 26.944000000000003, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312814.835079608] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "SEARCH_SHELF", "sim_time": 27.194000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312815.214712635] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=5.5s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[manipulation_node-7] [0m[INFO] [1789312818.313680751] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 28.590000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312818.313888788] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=6.7s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[perception_node-6] [0m[INFO] [1789312818.974958312] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "active": "BOOK:BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "sim_time": 28.856, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312820.211812718] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "SEARCHING_SHELF", "sim_time": 29.344, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312820.584932641] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "SEARCH_SHELF", "sim_time": 29.488000000000003, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312821.314084239] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=7.9s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[manipulation_node-7] [0m[INFO] [1789312824.063411520] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 30.878000000000004, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312824.414228329] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=9.2s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[perception_node-6] [0m[INFO] [1789312824.724712334] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "active": "BOOK:BOOK:WAITING_FOR_FIVE_DISTINCT_MARKERS", "sim_time": 31.144000000000002, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312825.961843499] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "SEARCHING_SHELF", "sim_time": 31.634, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312826.334689595] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "SEARCH_SHELF", "sim_time": 31.784000000000002, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312827.514194904] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=10.4s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[manipulation_node-7] [0m[INFO] [1789312829.813350794] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 33.158, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312830.006925928] [perception_node]: TARGET_LOCKED 1542ab27229d:BOOK:2:red position=[2.845932994079964, 0.6348612036346795, 1.5829178987920234][0m
+[task_manager-9] [0m[INFO] [1789312830.613866412] [task_manager]: MISSION state=SEARCHING_SHELF age_sim=11.6s acked=True command=('navigation', {'id': '1542ab27229d:3', 'command': 'SEARCH_SHELF', 'session': '1542ab27229d'})[0m
+[perception_node-6] [0m[INFO] [1789312830.724369329] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:LOCKED", "active": "BOOK:BOOK:LOCKED", "sim_time": 33.528, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312830.887933124] [navigation_node]: SUCCEEDED:SEARCH_SHELF[0m
+[task_manager-9] [0m[INFO] [1789312830.887974614] [task_manager]: RUNNING:ALIGNING_SHELF[0m
+[task_manager-9] [0m[INFO] [1789312830.888345274] [task_manager]: NAVIGATION COMMAND {"id": "1542ab27229d:4", "command": "ALIGN_SHELF", "target_id": "1542ab27229d:BOOK:2:red"}[0m
+[navigation_node-8] [0m[INFO] [1789312830.889165128] [navigation_node]: ACCEPTED:ALIGN_SHELF[0m
+[navigation_node-8] [0m[INFO] [1789312830.889910644] [navigation_node]: RUNNING:ALIGN_SHELF[0m
+[task_manager-9] [0m[INFO] [1789312831.711432561] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 33.936, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312831.834614859] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 33.986000000000004, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312833.713607799] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=1.1s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[manipulation_node-7] [0m[INFO] [1789312835.563628705] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 35.46, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312836.723995036] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:LOCKED", "active": "BOOK:BOOK:LOCKED", "sim_time": 35.92, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312836.813765277] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=2.4s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[navigation_node-8] [0m[INFO] [1789312837.584163033] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 36.254000000000005, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312837.711191883] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 36.304, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312839.913516171] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=3.6s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[manipulation_node-7] [0m[INFO] [1789312841.313036161] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 37.756, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312842.473956333] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 38.216, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312843.013162409] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=4.8s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[navigation_node-8] [0m[INFO] [1789312843.335291392] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 38.56, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312843.961337996] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 38.808, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312846.112968723] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=6.1s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[manipulation_node-7] [0m[INFO] [1789312846.814068124] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 39.944, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312848.724172222] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 40.686, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312849.213115733] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=7.3s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[navigation_node-8] [0m[INFO] [1789312849.333919155] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 40.934000000000005, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312849.960993339] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 41.172000000000004, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312852.213214013] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=8.5s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[manipulation_node-7] [0m[INFO] [1789312852.311485052] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 42.120000000000005, "clock_progress_age_wall": 0.0}[0m
+[perception_node-6] [0m[INFO] [1789312854.727862283] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; BOOK:LOCKED", "active": "BOOK:BOOK:LOCKED", "sim_time": 43.09, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312855.083762004] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 43.234, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312855.312758251] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=9.7s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[task_manager-9] [0m[INFO] [1789312855.710856642] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 43.488, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312857.246397591] [navigation_node]: ALIGN_SHELF: waiting for same fresh target[0m
+[manipulation_node-7] [0m[INFO] [1789312857.813133067] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 44.328, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312858.412995204] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=11.0s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[navigation_node-8] [0m[INFO] [1789312859.260049963] [navigation_node]: ALIGN_SHELF: waiting for same fresh target[0m
+[perception_node-6] [0m[INFO] [1789312860.474095686] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 45.46, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312860.834483859] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 45.61, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312861.260860182] [navigation_node]: ALIGN_SHELF: waiting for same fresh target[0m
+[task_manager-9] [0m[INFO] [1789312861.512480658] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=12.3s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[task_manager-9] [0m[INFO] [1789312861.710811691] [task_manager]: HEALTH {"component": "task", "boot": "bf6bffec24d44650b3966032d8deae49", "ready": true, "reason": "ready", "active": "ALIGNING_SHELF", "sim_time": 45.992000000000004, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312863.281598544] [navigation_node]: ALIGN_SHELF: waiting for same fresh target[0m
+[manipulation_node-7] [0m[INFO] [1789312863.562417461] [manipulation_node]: HEALTH {"component": "manipulation", "boot": "50977b0f273d4f588b54bc76d1cd72ed", "ready": true, "reason": "controllers_kinematics_joints_scene_ready", "active": "IDLE:IDLE", "sim_time": 46.768, "clock_progress_age_wall": 0.0}[0m
+[task_manager-9] [0m[INFO] [1789312864.612316349] [task_manager]: MISSION state=ALIGNING_SHELF age_sim=13.6s acked=True command=('navigation', {'id': '1542ab27229d:4', 'command': 'ALIGN_SHELF', 'target_id': '1542ab27229d:BOOK:2:red'})[0m
+[navigation_node-8] [0m[INFO] [1789312865.378658137] [navigation_node]: ALIGN_SHELF: waiting for same fresh target[0m
+[gz-1] [INFO] [1789312866.062635075] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[gz-1] [INFO] [1789312866.062788301] [controller_manager]: Shutdown request received....
+[gz-1] [INFO] [1789312866.062907339] [controller_manager]: Shutting down all controllers in the controller manager.
+[gz-1] [INFO] [1789312866.062961445] [controller_manager]: Deactivating controller 'joint_state_broadcaster'
+[gz-1] [INFO] [1789312866.063041724] [controller_manager]: Shutting down controller 'joint_state_broadcaster'
+[gz-1] [INFO] [1789312866.063096999] [controller_manager]: Deactivating controller 'gripper_left_controller_raw'
+[gz-1] [INFO] [1789312866.063143244] [controller_manager]: Shutting down controller 'gripper_left_controller_raw'
+[gz-1] [INFO] [1789312866.063173468] [controller_manager]: Deactivating controller 'arm_right_controller'
+[gz-1] [INFO] [1789312866.063206789] [controller_manager]: Shutting down controller 'arm_right_controller'
+[gz-1] [INFO] [1789312866.063233794] [controller_manager]: Deactivating controller 'arm_left_controller'
+[gz-1] [INFO] [1789312866.063264652] [controller_manager]: Shutting down controller 'arm_left_controller'
+[gz-1] [INFO] [1789312866.063290360] [controller_manager]: Deactivating controller 'gripper_right_controller_raw'
+[gz-1] [INFO] [1789312866.063317056] [controller_manager]: Shutting down controller 'gripper_right_controller_raw'
+[gz-1] [INFO] [1789312866.063343082] [controller_manager]: Deactivating controller 'torso_controller'
+[gz-1] [INFO] [1789312866.063369949] [controller_manager]: Shutting down controller 'torso_controller'
+[gz-1] [INFO] [1789312866.063395561] [controller_manager]: Deactivating controller 'head_controller'
+[gz-1] [INFO] [1789312866.063423586] [controller_manager]: Shutting down controller 'head_controller'
+[gz-1] [INFO] [1789312866.063470108] [resource_manager]: 'deactivate' hardware 'ros2_control_gazebo_system' 
+[gz-1] [INFO] [1789312866.063496020] [resource_manager]: Successful 'deactivate' of hardware 'ros2_control_gazebo_system'
+[gz-1] [INFO] [1789312866.063502214] [resource_manager]: 'shutdown' hardware 'ros2_control_gazebo_system' 
+[gz-1] [INFO] [1789312866.063509018] [resource_manager]: Successful 'shutdown' of hardware 'ros2_control_gazebo_system'
+[gz-1] [INFO] [1789312866.063514997] [controller_manager]: Shutting down the controller manager.
+[perception_node-6] [0m[INFO] [1789312866.223102517] [perception_node]: HEALTH {"component": "perception", "boot": "0d0c320e32004436bcea0ce063e0dd9b", "ready": true, "reason": "RGBD_READY; waiting for acquisition-time TF", "active": "BOOK:waiting for acquisition-time TF", "sim_time": 47.760000000000005, "clock_progress_age_wall": 0.0}[0m
+[navigation_node-8] [0m[INFO] [1789312866.582880194] [navigation_node]: HEALTH {"component": "navigation", "boot": "5cb8ee78e934412988fd4fb125fb047e", "ready": true, "reason": "odom_joints_lasers_ready", "active": "ALIGN_SHELF", "sim_time": 47.760000000000005, "clock_progress_age_wall": 0.49987438100015424}[0m
+[INFO] [gz-1]: process has finished cleanly [pid 3460]
+[INFO] [gripper_command_clamp.py-43]: sending signal 'SIGINT' to process[gripper_command_clamp.py-43]
+[INFO] [task_manager-9]: sending signal 'SIGINT' to process[task_manager-9]
+[INFO] [navigation_node-8]: sending signal 'SIGINT' to process[navigation_node-8]
+[INFO] [manipulation_node-7]: sending signal 'SIGINT' to process[manipulation_node-7]
+[INFO] [perception_node-6]: sending signal 'SIGINT' to process[perception_node-6]
+[INFO] [parameter_bridge-5]: sending signal 'SIGINT' to process[parameter_bridge-5]
+[INFO] [parameter_bridge-4]: sending signal 'SIGINT' to process[parameter_bridge-4]
+[INFO] [parameter_bridge-3]: sending signal 'SIGINT' to process[parameter_bridge-3]
+[INFO] [parameter_bridge-5]: process has finished cleanly [pid 3468]
+[INFO] [robot_state_publisher-2]: sending signal 'SIGINT' to process[robot_state_publisher-2]
+[INFO] [parameter_bridge-4]: process has finished cleanly [pid 3466]
+[parameter_bridge-5] [INFO] [1789312866.671160593] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [parameter_bridge-3]: process has finished cleanly [pid 3464]
+[parameter_bridge-4] [INFO] [1789312866.678510612] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[parameter_bridge-3] [INFO] [1789312866.685613320] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[robot_state_publisher-2] [INFO] [1789312866.691382599] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [gripper_command_clamp.py-43]: process has finished cleanly [pid 4324]
+[INFO] [task_manager-9]: process has finished cleanly [pid 3476]
+[INFO] [robot_state_publisher-2]: process has finished cleanly [pid 3462]
+[INFO] [navigation_node-8]: process has finished cleanly [pid 3474]
+[INFO] [perception_node-6]: process has finished cleanly [pid 3470]
+[INFO] [manipulation_node-7]: process has finished cleanly [pid 3472]

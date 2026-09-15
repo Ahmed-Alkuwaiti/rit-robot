@@ -1,0 +1,5456 @@
+import math
+import os
+import time
+import xml.etree.ElementTree as ET
+
+import numpy as np
+import rclpy
+from ament_index_python.packages import get_package_share_directory
+from geometry_msgs.msg import PoseStamped
+from rclpy.node import Node
+from ros_gz_interfaces.msg import Contacts
+from sensor_msgs.msg import JointState
+from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+
+LEFT_ARM_JOINTS = [
+    f'arm_left_{number}_joint'
+    for number in range(1, 8)
+]
+
+RIGHT_ARM_JOINTS = [
+    f'arm_right_{number}_joint'
+    for number in range(1, 8)
+]
+
+TORSO_JOINT = 'torso_lift_joint'
+
+LEFT_GRIPPER_JOINT = 'gripper_left_finger_joint'
+RIGHT_GRIPPER_JOINT = 'gripper_right_finger_joint'
+
+
+# PAL supplied tuck waypoints.
+LEFT_TUCK_WAYPOINTS = [
+    (
+        [
+            0.26,
+            -1.6008,
+            0.3489,
+            -1.9818,
+            0.0,
+            -1.5829,
+            0.0,
+        ],
+        5,
+    ),
+    (
+        [
+            0.36,
+            -1.83,
+            0.47,
+            -2.35,
+            0.0,
+            -1.5463,
+            0.0,
+        ],
+        10,
+    ),
+]
+
+RIGHT_TUCK_WAYPOINTS = [
+    (
+        [
+            -0.26,
+            -1.6008,
+            -0.3489,
+            -1.9818,
+            0.0,
+            -1.5829,
+            0.0,
+        ],
+        5,
+    ),
+    (
+        [
+            -0.36,
+            -1.83,
+            -0.47,
+            -2.35,
+            0.0,
+            -1.5569,
+            0.0,
+        ],
+        10,
+    ),
+]
+
+
+LEFT_TUCK_TARGET = LEFT_TUCK_WAYPOINTS[-1][0]
+RIGHT_TUCK_TARGET = RIGHT_TUCK_WAYPOINTS[-1][0]
+
+TORSO_RAISED_POSITION = 0.17202
+TORSO_TUCK_POSITION = 0.1
+
+ARM_TOLERANCE = 0.04
+TORSO_TOLERANCE = 0.01
+
+TUCK_TIMEOUT_WALL_SECONDS = 180.0
+
+GRIPPER_OPEN_POSITION = 0.07
+GRIPPER_CLOSED_POSITION = -0.001
+GRIPPER_TOLERANCE = 0.01
+GRIPPER_TIMEOUT_WALL_SECONDS = 12.0
+
+URDF_PATH = '/tmp/tiago.urdf'
+
+IK_BASE_LINK = 'base_footprint'
+IK_TIP_LINK = 'gripper_left_grasping_link'
+
+CARTESIAN_MAX_AXIS_M = 0.03
+CARTESIAN_MAX_NORM_M = 0.04
+CARTESIAN_MAX_ROTATION_RAD = 0.20
+
+CARTESIAN_TIMEOUT_WALL_SECONDS = 20.0
+
+CARTESIAN_JOINT_TOLERANCE = 0.01
+CARTESIAN_POSITION_TOLERANCE_M = 0.002
+CARTESIAN_ROTATION_TOLERANCE_RAD = 0.005
+
+TARGET_FRAME = 'base_footprint'
+TARGET_MAX_AGE_SECONDS = 5.0
+
+PREGRASP_STANDOFF_M = 0.08
+PREPLACE_CLEARANCE_M = 0.10
+
+GRASP_LIFT_M = 0.06
+GRASP_RETRACT_M = 0.14
+
+# Historical only.
+# Do NOT use this as a WEAK_GRASP rejection threshold.
+GRASP_CONTACT_MIN_CLOSED_POSITION = 0.012
+
+CONTACT_CACHE_TTL_SECONDS = 0.50
+GRASP_CONTACT_HOLD_SECONDS = 1.25
+
+TASK_TIMEOUT_WALL_SECONDS = 200.0
+
+TASK_TORSO_MIN_M = 0.15
+TASK_TORSO_MAX_M = 0.35
+TASK_TORSO_TARGET_Z_OFFSET_M = 1.10
+
+
+ROBOT_COLLISION_TOKENS = (
+    'tiago_pro',
+    'arm_left_',
+    'arm_right_',
+    'gripper_left_',
+    'gripper_right_',
+    'torso_',
+    'base_',
+    'wheel_',
+)
+
+IGNORED_CONTACT_TOKENS = (
+    'ground_plane',
+)
+
+
+CONTACT_TOPICS = (
+    [
+        '/contacts/base_footprint',
+        '/contacts/torso_lift_link',
+        '/contacts/head_1_link',
+        '/contacts/head_2_link',
+    ]
+    + [
+        f'/contacts/arm_left_{i}_link'
+        for i in range(1, 8)
+    ]
+    + [
+        f'/contacts/arm_right_{i}_link'
+        for i in range(1, 8)
+    ]
+    + [
+        '/contacts/gripper_left_fingertip_left_link',
+        '/contacts/gripper_left_fingertip_right_link',
+        '/contacts/gripper_left_inner_finger_left_link',
+        '/contacts/gripper_left_inner_finger_right_link',
+        '/contacts/gripper_left_outer_finger_left_link',
+        '/contacts/gripper_left_outer_finger_right_link',
+
+        '/contacts/gripper_right_fingertip_left_link',
+        '/contacts/gripper_right_fingertip_right_link',
+        '/contacts/gripper_right_inner_finger_left_link',
+        '/contacts/gripper_right_inner_finger_right_link',
+        '/contacts/gripper_right_outer_finger_left_link',
+        '/contacts/gripper_right_outer_finger_right_link',
+    ]
+)
+
+
+def vector_values(text, default):
+    if not text:
+        return np.array(
+            default,
+            dtype=float,
+        )
+
+    return np.array(
+        [
+            float(value)
+            for value in text.split()
+        ],
+        dtype=float,
+    )
+
+
+def rotation_from_rpy(
+    roll,
+    pitch,
+    yaw,
+):
+    cr = math.cos(roll)
+    sr = math.sin(roll)
+
+    cp = math.cos(pitch)
+    sp = math.sin(pitch)
+
+    cy = math.cos(yaw)
+    sy = math.sin(yaw)
+
+    rx = np.array([
+        [1, 0, 0],
+        [0, cr, -sr],
+        [0, sr, cr],
+    ])
+
+    ry = np.array([
+        [cp, 0, sp],
+        [0, 1, 0],
+        [-sp, 0, cp],
+    ])
+
+    rz = np.array([
+        [cy, -sy, 0],
+        [sy, cy, 0],
+        [0, 0, 1],
+    ])
+
+    return rz @ ry @ rx
+
+
+def axis_angle_rotation(
+    axis,
+    angle,
+):
+    axis = np.asarray(
+        axis,
+        dtype=float,
+    )
+
+    axis /= np.linalg.norm(axis)
+
+    x, y, z = axis
+
+    c = math.cos(angle)
+    s = math.sin(angle)
+
+    one_minus_c = 1.0 - c
+
+    return np.array([
+        [
+            c + x * x * one_minus_c,
+            x * y * one_minus_c - z * s,
+            x * z * one_minus_c + y * s,
+        ],
+        [
+            y * x * one_minus_c + z * s,
+            c + y * y * one_minus_c,
+            y * z * one_minus_c - x * s,
+        ],
+        [
+            z * x * one_minus_c - y * s,
+            z * y * one_minus_c + x * s,
+            c + z * z * one_minus_c,
+        ],
+    ])
+
+
+def matrix_transform(
+    rotation=None,
+    translation=None,
+):
+    result = np.eye(4)
+
+    if rotation is not None:
+        result[:3, :3] = rotation
+
+    if translation is not None:
+        result[:3, 3] = translation
+
+    return result
+
+
+def rotation_vector(rotation):
+    cosine = np.clip(
+        (
+            np.trace(rotation)
+            - 1.0
+        )
+        / 2.0,
+        -1.0,
+        1.0,
+    )
+
+    angle = math.acos(cosine)
+
+    if angle < 1e-9:
+        return np.zeros(3)
+
+    if (
+        abs(math.pi - angle)
+        < 1e-5
+    ):
+        (
+            eigenvalues,
+            eigenvectors,
+        ) = np.linalg.eig(
+            rotation
+        )
+
+        axis = np.real(
+            eigenvectors[
+                :,
+                np.argmin(
+                    abs(
+                        eigenvalues
+                        - 1.0
+                    )
+                ),
+            ]
+        )
+
+        axis /= np.linalg.norm(axis)
+
+        return axis * angle
+
+    axis = np.array([
+        (
+            rotation[2, 1]
+            - rotation[1, 2]
+        ),
+        (
+            rotation[0, 2]
+            - rotation[2, 0]
+        ),
+        (
+            rotation[1, 0]
+            - rotation[0, 1]
+        ),
+    ]) / (
+        2.0
+        * math.sin(angle)
+    )
+
+    return axis * angle
+
+
+class JointDescription:
+    def __init__(
+        self,
+        element,
+    ):
+        self.name = (
+            element.attrib['name']
+        )
+
+        self.joint_type = (
+            element.attrib['type']
+        )
+
+        self.parent = (
+            element
+            .find('parent')
+            .attrib['link']
+        )
+
+        self.child = (
+            element
+            .find('child')
+            .attrib['link']
+        )
+
+        origin = (
+            element.find('origin')
+        )
+
+        xyz = vector_values(
+            origin.attrib.get('xyz')
+            if origin is not None
+            else None,
+            [0, 0, 0],
+        )
+
+        rpy = vector_values(
+            origin.attrib.get('rpy')
+            if origin is not None
+            else None,
+            [0, 0, 0],
+        )
+
+        self.origin = matrix_transform(
+            rotation_from_rpy(*rpy),
+            xyz,
+        )
+
+        axis = element.find('axis')
+
+        self.axis = vector_values(
+            axis.attrib.get('xyz')
+            if axis is not None
+            else None,
+            [1, 0, 0],
+        )
+
+        limit = element.find('limit')
+
+        if (
+            self.joint_type
+            == 'continuous'
+        ):
+            self.lower = -math.pi
+            self.upper = math.pi
+
+        elif (
+            limit is not None
+            and 'lower' in limit.attrib
+            and 'upper' in limit.attrib
+        ):
+            self.lower = float(
+                limit.attrib['lower']
+            )
+
+            self.upper = float(
+                limit.attrib['upper']
+            )
+
+        else:
+            self.lower = 0.0
+            self.upper = 0.0
+
+    @property
+    def movable(self):
+        return (
+            self.joint_type
+            in (
+                'revolute',
+                'continuous',
+                'prismatic',
+            )
+        )
+
+    def motion(
+        self,
+        position,
+    ):
+        if (
+            self.joint_type
+            in (
+                'revolute',
+                'continuous',
+            )
+        ):
+            return matrix_transform(
+                rotation=(
+                    axis_angle_rotation(
+                        self.axis,
+                        position,
+                    )
+                )
+            )
+
+        if (
+            self.joint_type
+            == 'prismatic'
+        ):
+            return matrix_transform(
+                translation=(
+                    self.axis
+                    * position
+                )
+            )
+
+        return np.eye(4)
+
+
+def load_chain(
+    path,
+    base_link,
+    tip_link,
+):
+    root = (
+        ET.parse(path)
+        .getroot()
+    )
+
+    joint_by_child = {
+        element
+        .find('child')
+        .attrib['link']:
+        JointDescription(element)
+
+        for element
+        in root.findall('joint')
+    }
+
+    reversed_chain = []
+
+    link = tip_link
+
+    while link != base_link:
+        joint = (
+            joint_by_child
+            .get(link)
+        )
+
+        if joint is None:
+            raise RuntimeError(
+                f'No URDF chain from '
+                f'{base_link} '
+                f'to {tip_link}; '
+                f'stopped at {link}'
+            )
+
+        reversed_chain.append(
+            joint
+        )
+
+        link = joint.parent
+
+    return list(
+        reversed(
+            reversed_chain
+        )
+    )
+
+
+def forward_kinematics(
+    chain,
+    positions,
+):
+    result = np.eye(4)
+
+    for joint in chain:
+        result = (
+            result
+            @ joint.origin
+        )
+
+        if joint.movable:
+            result = (
+                result
+                @ joint.motion(
+                    positions[
+                        joint.name
+                    ]
+                )
+            )
+
+    return result
+
+
+def numerical_jacobian(
+    chain,
+    positions,
+    movable_names,
+    current_pose,
+):
+    epsilon = 1e-6
+
+    jacobian = np.zeros(
+        (
+            6,
+            len(movable_names),
+        )
+    )
+
+    for (
+        column,
+        name,
+    ) in enumerate(
+        movable_names
+    ):
+        shifted = dict(
+            positions
+        )
+
+        shifted[name] += epsilon
+
+        shifted_pose = (
+            forward_kinematics(
+                chain,
+                shifted,
+            )
+        )
+
+        jacobian[
+            :3,
+            column,
+        ] = (
+            shifted_pose[:3, 3]
+            - current_pose[:3, 3]
+        ) / epsilon
+
+        delta_rotation = (
+            shifted_pose[:3, :3]
+            @ current_pose[
+                :3,
+                :3,
+            ].T
+        )
+
+        jacobian[
+            3:,
+            column,
+        ] = (
+            rotation_vector(
+                delta_rotation
+            )
+            / epsilon
+        )
+
+    return jacobian
+
+
+def solve_ik(
+    chain,
+    seed,
+    target,
+    lower,
+    upper,
+    movable_names,
+):
+    positions = dict(seed)
+
+    damping = 0.03
+
+    for iteration in range(
+        250
+    ):
+        current = (
+            forward_kinematics(
+                chain,
+                positions,
+            )
+        )
+
+        position_error = (
+            target[:3, 3]
+            - current[:3, 3]
+        )
+
+        orientation_error = (
+            rotation_vector(
+                target[:3, :3]
+                @ current[
+                    :3,
+                    :3,
+                ].T
+            )
+        )
+
+        error = np.concatenate(
+            (
+                position_error,
+                orientation_error,
+            )
+        )
+
+        if (
+            np.linalg.norm(
+                position_error
+            )
+            < 5e-4
+            and
+            np.linalg.norm(
+                orientation_error
+            )
+            < 2e-3
+        ):
+            return (
+                True,
+                positions,
+                iteration,
+                position_error,
+                orientation_error,
+            )
+
+        jacobian = (
+            numerical_jacobian(
+                chain,
+                positions,
+                movable_names,
+                current,
+            )
+        )
+
+        system = (
+            jacobian
+            @ jacobian.T
+            + (
+                damping ** 2
+            )
+            * np.eye(6)
+        )
+
+        step = (
+            jacobian.T
+            @ np.linalg.solve(
+                system,
+                error,
+            )
+        )
+
+        largest = np.max(
+            np.abs(step)
+        )
+
+        if largest > 0.08:
+            step *= (
+                0.08
+                / largest
+            )
+
+        for (
+            index,
+            name,
+        ) in enumerate(
+            movable_names
+        ):
+            positions[name] = float(
+                np.clip(
+                    positions[name]
+                    + step[index],
+                    lower[index],
+                    upper[index],
+                )
+            )
+
+    current = (
+        forward_kinematics(
+            chain,
+            positions,
+        )
+    )
+
+    return (
+        False,
+        positions,
+        250,
+        (
+            target[:3, 3]
+            - current[:3, 3]
+        ),
+        rotation_vector(
+            target[:3, :3]
+            @ current[
+                :3,
+                :3,
+            ].T
+        ),
+    )
+
+
+class ManipulationNode(Node):
+    def __init__(self):
+        super().__init__(
+            'manipulation_node'
+        )
+
+        self.joint_positions = {}
+        self.joint_efforts = {}
+
+        self.active_command = None
+
+        self.tuck_stage = 'IDLE'
+
+        self.tuck_torso_clearance_target = (
+            TORSO_RAISED_POSITION
+        )
+
+        self.deadline = None
+
+        self.collision_detected = (
+            False
+        )
+
+        self.current_robot_contacts = (
+            set()
+        )
+
+        self.allowed_initial_contacts = (
+            set()
+        )
+
+        self.last_report_ns = 0
+
+        self.gripper_joint = None
+        self.gripper_target = None
+
+        self.cartesian_joint_target = (
+            None
+        )
+
+        self.cartesian_pose_target = (
+            None
+        )
+
+        self.cartesian_waypoints = []
+
+        self.cartesian_waypoint_total = (
+            0
+        )
+
+        self.cartesian_ik_seed = None
+
+        self.task_stage = 'IDLE'
+        self.stage_started_at = None
+
+        self.book_target = None
+        self.book_target_time = None
+
+        self.prepared_book_target = (
+            None
+        )
+
+        self.book_target_samples = []
+
+        self.bin_target = None
+        self.bin_target_time = None
+
+        self.prepared_bin_target = None
+
+        self.grasp_contact_detected = (
+            False
+        )
+
+        self.grasp_contact_since = (
+            None
+        )
+
+        self.grasp_confirmed = False
+
+        self.last_gripper_lock_command = (
+            0.0
+        )
+
+        self.gripper_lock_position = (
+            GRIPPER_CLOSED_POSITION
+        )
+
+        self.task_goal = None
+        self.task_torso_target = None
+        self.task_rotation = None
+
+        self.planned_task_joint_target = (
+            None
+        )
+
+        self.planned_task_pose = None
+
+        self.ik_chain = None
+
+        self.ik_chain_movable_names = (
+            []
+        )
+
+        self.ik_lower = None
+        self.ik_upper = None
+
+        self.kinematics_error = None
+
+        self.grasp_final_insertion_goal = (
+            None
+        )
+
+        self.grasp_retry_offsets = [
+            0.0,
+            -0.010,
+            0.010,
+        ]
+
+        self.grasp_retry_depth_offsets = [
+            0.0,
+            0.005,
+            0.010,
+        ]
+
+        self.grasp_retry_index = 0
+        self.grasp_base_x = None
+        self.grasp_base_y = None
+
+        self.transport_fold_target = None
+
+        self.left_trajectory_publisher = (
+            self.create_publisher(
+                JointTrajectory,
+                '/arm_left_controller/joint_trajectory',
+                10,
+            )
+        )
+
+        self.right_trajectory_publisher = (
+            self.create_publisher(
+                JointTrajectory,
+                '/arm_right_controller/joint_trajectory',
+                10,
+            )
+        )
+
+        self.torso_trajectory_publisher = (
+            self.create_publisher(
+                JointTrajectory,
+                '/torso_controller/joint_trajectory',
+                10,
+            )
+        )
+
+        self.left_gripper_trajectory_publisher = (
+            self.create_publisher(
+                JointTrajectory,
+                '/gripper_left_controller_raw/joint_trajectory',
+                10,
+            )
+        )
+
+        self.right_gripper_trajectory_publisher = (
+            self.create_publisher(
+                JointTrajectory,
+                '/gripper_right_controller_raw/joint_trajectory',
+                10,
+            )
+        )
+
+        self.status_publisher = (
+            self.create_publisher(
+                String,
+                '/rit/manipulation/status',
+                10,
+            )
+        )
+
+        self.joint_state_subscription = (
+            self.create_subscription(
+                JointState,
+                '/joint_states',
+                self.joint_state_callback,
+                10,
+            )
+        )
+
+        self.command_subscription = (
+            self.create_subscription(
+                String,
+                '/rit/manipulation/command',
+                self.command_callback,
+                10,
+            )
+        )
+
+        self.contact_states = {}
+        self.contact_state_times = {}
+
+        self.contact_subscriptions = []
+
+        for contact_topic in (
+            CONTACT_TOPICS
+        ):
+            subscription = (
+                self.create_subscription(
+                    Contacts,
+                    contact_topic,
+                    lambda message,
+                    topic=contact_topic:
+                    self.contact_callback(
+                        message,
+                        topic,
+                    ),
+                    10,
+                )
+            )
+
+            self.contact_subscriptions.append(
+                subscription
+            )
+
+        self.book_target_subscription = (
+            self.create_subscription(
+                PoseStamped,
+                '/rit/perception/book_target',
+                self.book_target_callback,
+                10,
+            )
+        )
+
+        self.bin_target_subscription = (
+            self.create_subscription(
+                PoseStamped,
+                '/rit/perception/bin_target',
+                self.bin_target_callback,
+                10,
+            )
+        )
+
+        self.control_timer = (
+            self.create_timer(
+                0.1,
+                self.control_loop,
+            )
+        )
+
+        self.load_kinematics()
+
+        self.publish_status(
+            'IDLE'
+        )
+
+        self.get_logger().info(
+            'Manipulation node ready'
+        )
+
+    def load_kinematics(self):
+        try:
+            urdf_path = URDF_PATH
+
+            if not os.path.isfile(
+                urdf_path
+            ):
+                urdf_path = os.path.join(
+                    get_package_share_directory(
+                        'erc_description'
+                    ),
+                    'urdf',
+                    'tiago_pro.urdf',
+                )
+
+            chain = load_chain(
+                urdf_path,
+                IK_BASE_LINK,
+                IK_TIP_LINK,
+            )
+
+            movable_names = [
+                joint.name
+                for joint in chain
+                if joint.movable
+            ]
+
+            if not all(
+                name in movable_names
+                for name
+                in LEFT_ARM_JOINTS
+            ):
+                raise RuntimeError(
+                    f'Left-arm joints missing '
+                    f'from chain: '
+                    f'{movable_names}'
+                )
+
+            self.ik_chain = chain
+
+            self.ik_chain_movable_names = (
+                movable_names
+            )
+
+            self.ik_lower = np.array([
+                next(
+                    joint.lower
+                    for joint in chain
+                    if joint.name == name
+                )
+                for name
+                in LEFT_ARM_JOINTS
+            ])
+
+            self.ik_upper = np.array([
+                next(
+                    joint.upper
+                    for joint in chain
+                    if joint.name == name
+                )
+                for name
+                in LEFT_ARM_JOINTS
+            ])
+
+            self.kinematics_error = None
+
+            self.get_logger().info(
+                f'Left-arm kinematics ready '
+                f'from {urdf_path}'
+            )
+
+        except Exception as error:
+            self.ik_chain = None
+
+            self.ik_chain_movable_names = (
+                []
+            )
+
+            self.kinematics_error = str(
+                error
+            )
+
+            self.get_logger().warning(
+                f'Left-arm kinematics '
+                f'unavailable: {error}'
+            )
+
+    def joint_state_callback(
+        self,
+        message,
+    ):
+        for (
+            index,
+            name,
+        ) in enumerate(
+            message.name
+        ):
+            if index < len(
+                message.position
+            ):
+                position = (
+                    message.position[
+                        index
+                    ]
+                )
+
+                if math.isfinite(
+                    position
+                ):
+                    self.joint_positions[
+                        name
+                    ] = position
+
+            if index < len(
+                message.effort
+            ):
+                effort = (
+                    message.effort[
+                        index
+                    ]
+                )
+
+                if math.isfinite(
+                    effort
+                ):
+                    self.joint_efforts[
+                        name
+                    ] = effort
+
+        now_ns = (
+            self.get_clock()
+            .now()
+            .nanoseconds
+        )
+
+        if (
+            now_ns
+            - self.last_report_ns
+            < 2_000_000_000
+        ):
+            return
+
+        self.last_report_ns = now_ns
+
+        required = (
+            LEFT_ARM_JOINTS
+            + RIGHT_ARM_JOINTS
+            + [
+                TORSO_JOINT,
+                LEFT_GRIPPER_JOINT,
+                RIGHT_GRIPPER_JOINT,
+            ]
+        )
+
+        missing = [
+            name
+            for name in required
+            if name
+            not in self.joint_positions
+        ]
+
+        if missing:
+            self.get_logger().warning(
+                f'Missing joints: '
+                f'{missing}'
+            )
+
+    def book_target_callback(
+        self,
+        message,
+    ):
+        target = (
+            self.validated_target(
+                message,
+                'book',
+            )
+        )
+
+        if target is not None:
+            self.book_target_samples.append(
+                target.copy()
+            )
+
+            self.book_target_samples = (
+                self.book_target_samples[
+                    -7:
+                ]
+            )
+
+            self.book_target = (
+                np.median(
+                    np.stack(
+                        self.book_target_samples
+                    ),
+                    axis=0,
+                )
+            )
+
+            self.book_target_time = (
+                time.monotonic()
+            )
+
+    def bin_target_callback(
+        self,
+        message,
+    ):
+        target = (
+            self.validated_target(
+                message,
+                'bin',
+            )
+        )
+
+        if target is not None:
+            self.bin_target = target
+
+            self.bin_target_time = (
+                time.monotonic()
+            )
+
+    def validated_target(
+        self,
+        message,
+        label,
+    ):
+        frame = (
+            message
+            .header
+            .frame_id
+            .lstrip('/')
+        )
+
+        if frame != TARGET_FRAME:
+            self.get_logger().warning(
+                f'Ignoring {label} target '
+                f'in frame {frame!r}; '
+                f'expected '
+                f'{TARGET_FRAME!r}'
+            )
+
+            return None
+
+        position = (
+            message.pose.position
+        )
+
+        target = np.array([
+            position.x,
+            position.y,
+            position.z,
+        ], dtype=float)
+
+        if not np.all(
+            np.isfinite(target)
+        ):
+            self.get_logger().warning(
+                f'Ignoring non-finite '
+                f'{label} target'
+            )
+
+            return None
+
+        return target
+
+    @staticmethod
+    def target_is_fresh(
+        timestamp,
+    ):
+        return (
+            timestamp is not None
+            and
+            time.monotonic()
+            - timestamp
+            <= TARGET_MAX_AGE_SECONDS
+        )
+
+    def command_callback(
+        self,
+        message,
+    ):
+        command = (
+            message.data
+            .strip()
+            .upper()
+        )
+
+        if command == 'STOP':
+            self.stop_current_motion()
+            return
+
+        if self.active_command is not None:
+            self.publish_status(
+                f'FAILED:{command}:BUSY'
+            )
+            return
+
+        if command == 'TUCK_ARMS':
+            self.start_tuck_arms(
+                'TUCK_ARMS'
+            )
+
+        elif command == 'PREPARE_GRASP':
+            self.start_prepare_grasp()
+
+        elif command == 'GRASP':
+            self.start_grasp()
+
+        elif command == 'LIFT_AND_RETRACT':
+            self.start_lift_and_retract()
+
+        elif command == 'TRANSPORT_POSE':
+            self.start_transport_pose()
+
+        elif command == 'PREPARE_PLACE':
+            self.start_prepare_place()
+
+        elif command == 'PLACE':
+            self.start_place()
+
+        elif command == 'SAFE_POSE':
+            self.start_tuck_arms(
+                'SAFE_POSE'
+            )
+
+        elif command.startswith(
+            'MOVE_LEFT_REL:'
+        ):
+            self.start_move_left_relative(
+                command
+            )
+
+        elif (
+            command
+            == 'OPEN_LEFT_GRIPPER'
+        ):
+            self.start_gripper(
+                command,
+                self.left_gripper_trajectory_publisher,
+                LEFT_GRIPPER_JOINT,
+                GRIPPER_OPEN_POSITION,
+            )
+
+        elif (
+            command
+            == 'CLOSE_LEFT_GRIPPER'
+        ):
+            self.start_gripper(
+                command,
+                self.left_gripper_trajectory_publisher,
+                LEFT_GRIPPER_JOINT,
+                GRIPPER_CLOSED_POSITION,
+            )
+
+        elif (
+            command
+            == 'OPEN_RIGHT_GRIPPER'
+        ):
+            self.start_gripper(
+                command,
+                self.right_gripper_trajectory_publisher,
+                RIGHT_GRIPPER_JOINT,
+                GRIPPER_OPEN_POSITION,
+            )
+
+        elif (
+            command
+            == 'CLOSE_RIGHT_GRIPPER'
+        ):
+            self.start_gripper(
+                command,
+                self.right_gripper_trajectory_publisher,
+                RIGHT_GRIPPER_JOINT,
+                GRIPPER_CLOSED_POSITION,
+            )
+
+        else:
+            self.publish_status(
+                f'FAILED:{command}:'
+                'UNKNOWN_COMMAND'
+            )
+
+    def contact_callback(
+        self,
+        message,
+        source_topic=None,
+    ):
+        now = time.monotonic()
+
+        sensor_contacts = set()
+
+        for contact in (
+            message.contacts
+        ):
+            first = (
+                contact
+                .collision1
+                .name
+                .lower()
+            )
+
+            second = (
+                contact
+                .collision2
+                .name
+                .lower()
+            )
+
+            first_is_robot = (
+                self.is_robot_collision(
+                    first
+                )
+            )
+
+            second_is_robot = (
+                self.is_robot_collision(
+                    second
+                )
+            )
+
+            if not (
+                first_is_robot
+                or second_is_robot
+            ):
+                continue
+
+            if (
+                self
+                .is_ignored_ground_contact(
+                    first,
+                    second,
+                )
+            ):
+                continue
+
+            sensor_contacts.add(
+                tuple(
+                    sorted(
+                        (
+                            first,
+                            second,
+                        )
+                    )
+                )
+            )
+
+        if source_topic is not None:
+            self.contact_states[
+                source_topic
+            ] = sensor_contacts
+
+            self.contact_state_times[
+                source_topic
+            ] = now
+
+            expired_topics = [
+                topic
+                for (
+                    topic,
+                    timestamp,
+                )
+                in (
+                    self
+                    .contact_state_times
+                    .items()
+                )
+                if (
+                    now - timestamp
+                    > CONTACT_CACHE_TTL_SECONDS
+                )
+            ]
+
+            for topic in expired_topics:
+                self.contact_state_times.pop(
+                    topic,
+                    None,
+                )
+
+                self.contact_states.pop(
+                    topic,
+                    None,
+                )
+
+            robot_contacts = set()
+
+            for contacts in (
+                self.contact_states
+                .values()
+            ):
+                robot_contacts.update(
+                    contacts
+                )
+
+        else:
+            robot_contacts = (
+                sensor_contacts
+            )
+
+        self.current_robot_contacts = (
+            robot_contacts
+        )
+
+        if (
+            self.active_command
+            is None
+        ):
+            return
+
+        gripper_book_contacts = {
+            pair
+            for pair in robot_contacts
+            if (
+                self
+                .is_left_gripper_book_contact(
+                    pair
+                )
+            )
+        }
+
+        if (
+            self.active_command
+            == 'GRASP'
+        ):
+            self.allowed_initial_contacts.update(
+                gripper_book_contacts
+            )
+
+            contact_sides = {
+                side
+
+                for pair
+                in gripper_book_contacts
+
+                for side in [
+                    self
+                    .left_gripper_book_side(
+                        pair
+                    )
+                ]
+
+                if side is not None
+            }
+
+            if (
+                'left' in contact_sides
+                and
+                'right' in contact_sides
+            ):
+                if (
+                    self.grasp_contact_since
+                    is None
+                ):
+                    self.grasp_contact_since = (
+                        now
+                    )
+
+                if (
+                    now
+                    - self.grasp_contact_since
+                    >= GRASP_CONTACT_HOLD_SECONDS
+                ):
+                    self.grasp_contact_detected = (
+                        True
+                    )
+
+            else:
+                self.grasp_contact_since = (
+                    None
+                )
+
+                self.grasp_contact_detected = (
+                    False
+                )
+
+        elif (
+            self.grasp_confirmed
+            and
+            self.active_command
+            in (
+                'LIFT_AND_RETRACT',
+                'TRANSPORT_POSE',
+            )
+        ):
+            self.allowed_initial_contacts.update(
+                gripper_book_contacts
+            )
+
+        new_contacts = (
+            robot_contacts
+            - self.allowed_initial_contacts
+        )
+
+        self.allowed_initial_contacts.intersection_update(
+            robot_contacts
+        )
+
+        if new_contacts:
+            self.collision_detected = (
+                True
+            )
+
+            first, second = next(
+                iter(new_contacts)
+            )
+
+            self.get_logger().error(
+                f'Robot collision detected: '
+                f'{first} <-> {second}'
+            )
+
+    @staticmethod
+    def is_left_gripper_book_contact(
+        pair,
+    ):
+        names = ' '.join(pair)
+
+        return (
+            'book' in names
+            and
+            'gripper_left_' in names
+        )
+
+    @staticmethod
+    def left_gripper_book_side(
+        pair,
+    ):
+        names = ' '.join(pair)
+
+        if 'book' not in names:
+            return None
+
+        if (
+            'gripper_left_fingertip_left'
+            in names
+            or
+            'gripper_left_inner_finger_left'
+            in names
+        ):
+            return 'left'
+
+        if (
+            'gripper_left_fingertip_right'
+            in names
+            or
+            'gripper_left_inner_finger_right'
+            in names
+        ):
+            return 'right'
+
+        return None
+
+    @staticmethod
+    def is_robot_collision(
+        name,
+    ):
+        return any(
+            token in name
+            for token
+            in ROBOT_COLLISION_TOKENS
+        )
+
+    @staticmethod
+    def is_ignored_ground_contact(
+        first,
+        second,
+    ):
+        first_is_ground = any(
+            token in first
+            for token
+            in IGNORED_CONTACT_TOKENS
+        )
+
+        second_is_ground = any(
+            token in second
+            for token
+            in IGNORED_CONTACT_TOKENS
+        )
+
+        return (
+            first_is_ground
+            or second_is_ground
+        )
+
+    def start_tuck_arms(
+        self,
+        report_command='TUCK_ARMS',
+    ):
+        required = (
+            LEFT_ARM_JOINTS
+            + RIGHT_ARM_JOINTS
+            + [TORSO_JOINT]
+        )
+
+        missing = [
+            name
+            for name in required
+            if name
+            not in self.joint_positions
+        ]
+
+        if missing:
+            self.publish_status(
+                f'FAILED:{report_command}:'
+                'MISSING_JOINT_STATES'
+            )
+
+            return
+
+        publishers = [
+            self.left_trajectory_publisher,
+            self.right_trajectory_publisher,
+            self.torso_trajectory_publisher,
+        ]
+
+        if any(
+            publisher
+            .get_subscription_count()
+            == 0
+            for publisher
+            in publishers
+        ):
+            self.publish_status(
+                f'FAILED:{report_command}:'
+                'MISSING_CONTROLLER'
+            )
+
+            return
+
+        arms_already_tucked = (
+            self.group_near(
+                LEFT_ARM_JOINTS,
+                LEFT_TUCK_TARGET,
+                ARM_TOLERANCE,
+            )
+            and
+            self.group_near(
+                RIGHT_ARM_JOINTS,
+                RIGHT_TUCK_TARGET,
+                ARM_TOLERANCE,
+            )
+        )
+
+        torso_already_tucked = (
+            self.joint_near(
+                TORSO_JOINT,
+                TORSO_TUCK_POSITION,
+                TORSO_TOLERANCE,
+            )
+        )
+
+        if (
+            arms_already_tucked
+            and torso_already_tucked
+        ):
+            self.publish_status(
+                f'RUNNING:{report_command}'
+            )
+
+            self.publish_status(
+                f'SUCCEEDED:{report_command}'
+            )
+
+            self.get_logger().info(
+                f'{report_command} already '
+                'satisfied by feedback'
+            )
+
+            return
+
+        self.active_command = (
+            report_command
+        )
+
+        current_torso = (
+            self.joint_positions[
+                TORSO_JOINT
+            ]
+        )
+
+        self.tuck_torso_clearance_target = (
+            max(
+                current_torso,
+                TORSO_RAISED_POSITION,
+            )
+        )
+
+        self.deadline = (
+            time.monotonic()
+            + TUCK_TIMEOUT_WALL_SECONDS
+        )
+
+        self.collision_detected = (
+            False
+        )
+
+        self.allowed_initial_contacts = (
+            set(
+                self
+                .current_robot_contacts
+            )
+        )
+
+        if (
+            self.allowed_initial_contacts
+        ):
+            self.get_logger().warning(
+                'Allowing pre-existing '
+                'contact(s) only while '
+                'the robot retracts'
+            )
+
+        self.publish_status(
+            f'RUNNING:{report_command}'
+        )
+
+        if (
+            current_torso
+            >= (
+                TORSO_RAISED_POSITION
+                - TORSO_TOLERANCE
+            )
+        ):
+            if (
+                report_command
+                == 'TRANSPORT_POSE'
+                and
+                self.grasp_confirmed
+            ):
+                self.transport_fold_target = [
+                    self.joint_positions[
+                        joint
+                    ]
+                    for joint
+                    in LEFT_ARM_JOINTS
+                ]
+
+                # Reverse pregrasp:
+                # fold elbow inward first.
+                self.transport_fold_target[
+                    3
+                ] = -2.20
+
+                self.publish_single_target(
+                    self.left_trajectory_publisher,
+                    LEFT_ARM_JOINTS,
+                    self.transport_fold_target,
+                    5,
+                )
+
+                self.tuck_stage = (
+                    'TRANSPORT_FOLDING_ELBOW'
+                )
+
+                self.get_logger().info(
+                    'Transport: folding '
+                    'elbow inward before '
+                    'tucking arm'
+                )
+
+            else:
+                self.publish_trajectory(
+                    self.left_trajectory_publisher,
+                    LEFT_ARM_JOINTS,
+                    LEFT_TUCK_WAYPOINTS,
+                )
+
+                self.publish_trajectory(
+                    self.right_trajectory_publisher,
+                    RIGHT_ARM_JOINTS,
+                    RIGHT_TUCK_WAYPOINTS,
+                )
+
+                self.tuck_stage = (
+                    'TUCKING_ARMS'
+                )
+
+        else:
+            self.tuck_stage = (
+                'RAISING_TORSO'
+            )
+
+            self.publish_single_target(
+                self.torso_trajectory_publisher,
+                [TORSO_JOINT],
+                [
+                    self
+                    .tuck_torso_clearance_target
+                ],
+                5,
+            )
+
+    def start_gripper(
+        self,
+        command,
+        publisher,
+        joint_name,
+        target,
+    ):
+        if (
+            joint_name
+            not in self.joint_positions
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                'MISSING_JOINT_STATE'
+            )
+            return
+
+        if (
+            publisher
+            .get_subscription_count()
+            == 0
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                'MISSING_CONTROLLER'
+            )
+            return
+
+        if self.joint_near(
+            joint_name,
+            target,
+            GRIPPER_TOLERANCE,
+        ):
+            self.publish_status(
+                f'RUNNING:{command}'
+            )
+
+            self.publish_status(
+                f'SUCCEEDED:{command}'
+            )
+
+            self.get_logger().info(
+                f'{command} already '
+                'satisfied by feedback'
+            )
+
+            return
+
+        self.active_command = command
+
+        self.gripper_joint = (
+            joint_name
+        )
+
+        self.gripper_target = (
+            target
+        )
+
+        self.deadline = (
+            time.monotonic()
+            + GRIPPER_TIMEOUT_WALL_SECONDS
+        )
+
+        self.collision_detected = (
+            False
+        )
+
+        self.allowed_initial_contacts = (
+            set(
+                self
+                .current_robot_contacts
+            )
+        )
+
+        self.publish_status(
+            f'RUNNING:{command}'
+        )
+
+        self.publish_single_target(
+            publisher,
+            [joint_name],
+            [target],
+            3,
+        )
+
+    def start_move_left_relative(
+        self,
+        command,
+    ):
+        try:
+            values = (
+                command
+                .split(':', 1)[1]
+                .split(',')
+            )
+
+            if len(values) != 3:
+                raise ValueError
+
+            offset = np.array([
+                float(value)
+                for value in values
+            ])
+
+            if not np.all(
+                np.isfinite(offset)
+            ):
+                raise ValueError
+
+        except ValueError:
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'INVALID_FORMAT'
+            )
+            return
+
+        if (
+            np.max(
+                np.abs(offset)
+            )
+            > CARTESIAN_MAX_AXIS_M
+            or
+            np.linalg.norm(offset)
+            > CARTESIAN_MAX_NORM_M
+        ):
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'OFFSET_TOO_LARGE'
+            )
+            return
+
+        if self.ik_chain is None:
+            self.load_kinematics()
+
+        if self.ik_chain is None:
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'KINEMATICS_UNAVAILABLE'
+            )
+            return
+
+        missing = [
+            name
+
+            for name
+            in (
+                self
+                .ik_chain_movable_names
+            )
+
+            if (
+                name
+                not in self.joint_positions
+            )
+        ]
+
+        if missing:
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'MISSING_JOINT_STATES'
+            )
+            return
+
+        if (
+            self
+            .left_trajectory_publisher
+            .get_subscription_count()
+            == 0
+        ):
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'MISSING_CONTROLLER'
+            )
+            return
+
+        seed = {
+            name:
+            self.joint_positions[name]
+
+            for name
+            in self.ik_chain_movable_names
+        }
+
+        current_pose = (
+            forward_kinematics(
+                self.ik_chain,
+                seed,
+            )
+        )
+
+        target_pose = (
+            current_pose.copy()
+        )
+
+        target_pose[
+            :3,
+            3,
+        ] += offset
+
+        (
+            success,
+            solution,
+            iterations,
+            position_error,
+            rotation_error,
+        ) = solve_ik(
+            self.ik_chain,
+            seed,
+            target_pose,
+            self.ik_lower,
+            self.ik_upper,
+            LEFT_ARM_JOINTS,
+        )
+
+        if not success:
+            self.get_logger().error(
+                f'IK failed: '
+                f'position_error='
+                f'{np.linalg.norm(position_error):.6f}, '
+                f'rotation_error='
+                f'{np.linalg.norm(rotation_error):.6f}'
+            )
+
+            self.publish_status(
+                'FAILED:MOVE_LEFT_REL:'
+                'IK_NO_SOLUTION'
+            )
+
+            return
+
+        self.cartesian_joint_target = [
+            solution[name]
+            for name
+            in LEFT_ARM_JOINTS
+        ]
+
+        self.cartesian_pose_target = (
+            target_pose
+        )
+
+        self.active_command = (
+            'MOVE_LEFT_REL'
+        )
+
+        self.deadline = (
+            time.monotonic()
+            + CARTESIAN_TIMEOUT_WALL_SECONDS
+        )
+
+        self.collision_detected = (
+            False
+        )
+
+        self.allowed_initial_contacts = (
+            set(
+                self
+                .current_robot_contacts
+            )
+        )
+
+        self.publish_status(
+            'RUNNING:MOVE_LEFT_REL'
+        )
+
+        self.get_logger().info(
+            f'MOVE_LEFT_REL IK solved '
+            f'in {iterations} iteration(s); '
+            f'offset={offset.tolist()}'
+        )
+
+        self.publish_single_target(
+            self.left_trajectory_publisher,
+            LEFT_ARM_JOINTS,
+            self.cartesian_joint_target,
+            4,
+        )
+
+    def fresh_target(
+        self,
+        target,
+        timestamp,
+        command,
+        label,
+    ):
+        if (
+            target is None
+            or
+            not self.target_is_fresh(
+                timestamp
+            )
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                f'{label}_TARGET_UNAVAILABLE'
+            )
+
+            return None
+
+        return target.copy()
+
+    def current_left_pose(self):
+        if self.ik_chain is None:
+            self.load_kinematics()
+
+        if self.ik_chain is None:
+            return None
+
+        if any(
+            name
+            not in self.joint_positions
+
+            for name
+            in self.ik_chain_movable_names
+        ):
+            return None
+
+        positions = {
+            name:
+            self.joint_positions[name]
+
+            for name
+            in self.ik_chain_movable_names
+        }
+
+        return forward_kinematics(
+            self.ik_chain,
+            positions,
+        )
+
+    @staticmethod
+    def segmented_poses(
+        start,
+        goal,
+    ):
+        delta = (
+            goal[:3, 3]
+            - start[:3, 3]
+        )
+
+        rotation_delta = (
+            rotation_vector(
+                goal[:3, :3]
+                @ start[
+                    :3,
+                    :3,
+                ].T
+            )
+        )
+
+        rotation_angle = (
+            np.linalg.norm(
+                rotation_delta
+            )
+        )
+
+        count = max(
+            1,
+
+            int(
+                math.ceil(
+                    np.max(
+                        np.abs(delta)
+                    )
+                    / CARTESIAN_MAX_AXIS_M
+                )
+            ),
+
+            int(
+                math.ceil(
+                    np.linalg.norm(
+                        delta
+                    )
+                    / CARTESIAN_MAX_NORM_M
+                )
+            ),
+
+            int(
+                math.ceil(
+                    rotation_angle
+                    / CARTESIAN_MAX_ROTATION_RAD
+                )
+            ),
+        )
+
+        poses = []
+
+        for index in range(
+            1,
+            count + 1,
+        ):
+            fraction = (
+                index
+                / count
+            )
+
+            pose = start.copy()
+
+            pose[
+                :3,
+                3,
+            ] = (
+                start[:3, 3]
+                + delta
+                * fraction
+            )
+
+            if rotation_angle > 1e-9:
+                incremental_rotation = (
+                    axis_angle_rotation(
+                        (
+                            rotation_delta
+                            / rotation_angle
+                        ),
+                        (
+                            rotation_angle
+                            * fraction
+                        ),
+                    )
+                )
+
+                pose[
+                    :3,
+                    :3,
+                ] = (
+                    incremental_rotation
+                    @ start[
+                        :3,
+                        :3,
+                    ]
+                )
+
+            poses.append(
+                pose
+            )
+
+        return poses
+
+    @staticmethod
+    def torso_position_for_target(
+        target_z,
+    ):
+        return float(
+            np.clip(
+                (
+                    target_z
+                    - TASK_TORSO_TARGET_Z_OFFSET_M
+                ),
+                TASK_TORSO_MIN_M,
+                TASK_TORSO_MAX_M,
+            )
+        )
+
+    def task_pose_preferences(
+        self,
+        target_z,
+        label,
+    ):
+        if label == 'BOOK':
+            if target_z < 0.80:
+                torso = 0.15
+
+            elif target_z < 1.10:
+                torso = 0.30
+
+            else:
+                torso = 0.35
+
+            return (
+                torso,
+                (
+                    -180.0,
+                    -135.0,
+                    -90.0,
+                    -45.0,
+                ),
+            )
+
+        return (
+            self.torso_position_for_target(
+                target_z
+            ),
+            (
+                -180.0,
+                -135.0,
+                -90.0,
+                -45.0,
+            ),
+        )
+
+    def plan_task_pose(
+        self,
+        goal,
+        command,
+        label,
+    ):
+        if self.ik_chain is None:
+            self.load_kinematics()
+
+        if self.ik_chain is None:
+            self.publish_status(
+                f'FAILED:{command}:'
+                'KINEMATICS_UNAVAILABLE'
+            )
+            return False
+
+        if any(
+            name
+            not in self.joint_positions
+
+            for name
+            in self.ik_chain_movable_names
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                'MISSING_JOINT_STATES'
+            )
+            return False
+
+        (
+            torso_target,
+            roll_candidates,
+        ) = self.task_pose_preferences(
+            goal[2],
+            label,
+        )
+
+        torso_candidates = [
+            torso_target,
+
+            torso_target + 0.05,
+            torso_target - 0.05,
+
+            torso_target + 0.10,
+            torso_target - 0.10,
+        ]
+
+        torso_candidates = [
+            float(
+                np.clip(
+                    value,
+                    TASK_TORSO_MIN_M,
+                    TASK_TORSO_MAX_M,
+                )
+            )
+            for value
+            in torso_candidates
+        ]
+
+        torso_candidates = list(
+            dict.fromkeys(
+                torso_candidates
+            )
+        )
+
+        base_seed = {
+            name:
+            self.joint_positions[name]
+
+            for name
+            in self.ik_chain_movable_names
+        }
+
+        self.get_logger().info(
+            f'{command} IK target: '
+            f'x={goal[0]:.3f}, '
+            f'y={goal[1]:.3f}, '
+            f'z={goal[2]:.3f}'
+        )
+
+        pitch_candidates = [
+            0.0,
+            -15.0,
+            15.0,
+            -30.0,
+            30.0,
+            -45.0,
+            45.0,
+        ]
+
+        for candidate_torso in (
+            torso_candidates
+        ):
+            seed = (
+                base_seed.copy()
+            )
+
+            seed[TORSO_JOINT] = (
+                candidate_torso
+            )
+
+            for roll_degrees in (
+                roll_candidates
+            ):
+                for pitch_degrees in (
+                    pitch_candidates
+                ):
+                    target_pose = (
+                        np.eye(4)
+                    )
+
+                    target_pose[
+                        :3,
+                        :3,
+                    ] = rotation_from_rpy(
+                        math.radians(
+                            roll_degrees
+                        ),
+                        math.radians(
+                            pitch_degrees
+                        ),
+                        0.0,
+                    )
+
+                    target_pose[
+                        :3,
+                        3,
+                    ] = goal
+
+                    (
+                        success,
+                        solution,
+                        _,
+                        _,
+                        _,
+                    ) = solve_ik(
+                        self.ik_chain,
+                        seed,
+                        target_pose,
+                        self.ik_lower,
+                        self.ik_upper,
+                        LEFT_ARM_JOINTS,
+                    )
+
+                    if not success:
+                        self.get_logger().info(
+                            f'IK rejected: '
+                            f'torso='
+                            f'{candidate_torso:.3f}, '
+                            f'roll='
+                            f'{roll_degrees:.1f}, '
+                            f'pitch='
+                            f'{pitch_degrees:.1f}'
+                        )
+                        continue
+
+                    self.task_torso_target = (
+                        candidate_torso
+                    )
+
+                    self.task_rotation = (
+                        target_pose[
+                            :3,
+                            :3,
+                        ].copy()
+                    )
+
+                    self.planned_task_joint_target = [
+                        solution[name]
+                        for name
+                        in LEFT_ARM_JOINTS
+                    ]
+
+                    self.planned_task_pose = (
+                        target_pose
+                    )
+
+                    self.get_logger().info(
+                        f'{command} plan: '
+                        f'torso='
+                        f'{candidate_torso:.3f}, '
+                        f'gripper_roll='
+                        f'{roll_degrees:.1f} deg, '
+                        f'gripper_pitch='
+                        f'{pitch_degrees:.1f} deg'
+                    )
+
+                    return True
+
+        self.publish_status(
+            f'FAILED:{command}:'
+            'IK_NO_SOLUTION'
+        )
+
+        return False
+
+    def publish_planned_task_pose(
+        self,
+    ):
+        if (
+            self.planned_task_joint_target
+            is None
+            or
+            self.planned_task_pose
+            is None
+        ):
+            self.fail_active_command(
+                'IK_PLAN_UNAVAILABLE'
+            )
+            return False
+
+        self.cartesian_joint_target = (
+            list(
+                self
+                .planned_task_joint_target
+            )
+        )
+
+        self.cartesian_pose_target = (
+            self
+            .planned_task_pose
+            .copy()
+        )
+
+        self.cartesian_waypoints = []
+
+        self.stage_started_at = (
+            time.monotonic()
+        )
+
+        self.publish_single_target(
+            self.left_trajectory_publisher,
+            LEFT_ARM_JOINTS,
+            self.cartesian_joint_target,
+            6,
+        )
+
+        return True
+
+    def begin_task(
+        self,
+        command,
+        stage,
+    ):
+        publishers = [
+            self.left_trajectory_publisher,
+            self.left_gripper_trajectory_publisher,
+            self.torso_trajectory_publisher,
+        ]
+
+        if any(
+            publisher
+            .get_subscription_count()
+            == 0
+            for publisher
+            in publishers
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                'MISSING_CONTROLLER'
+            )
+            return False
+
+        if (
+            self.current_left_pose()
+            is None
+        ):
+            self.publish_status(
+                f'FAILED:{command}:'
+                'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+            )
+            return False
+
+        self.active_command = command
+        self.task_stage = stage
+
+        self.deadline = (
+            time.monotonic()
+            + TASK_TIMEOUT_WALL_SECONDS
+        )
+
+        self.stage_started_at = (
+            time.monotonic()
+        )
+
+        self.collision_detected = (
+            False
+        )
+
+        self.allowed_initial_contacts = (
+            set(
+                self
+                .current_robot_contacts
+            )
+        )
+
+        self.cartesian_waypoints = []
+
+        self.grasp_contact_detected = (
+            False
+        )
+
+        self.grasp_contact_since = (
+            None
+        )
+
+        self.publish_status(
+            f'RUNNING:{command}'
+        )
+
+        return True
+
+    def set_cartesian_path(
+        self,
+        goal,
+        orientation=None,
+    ):
+        current_pose = (
+            self.current_left_pose()
+        )
+
+        if current_pose is None:
+            self.fail_active_command(
+                'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+            )
+            return False
+
+        self.cartesian_ik_seed = {
+            name:
+            self.joint_positions[name]
+
+            for name
+            in self.ik_chain_movable_names
+        }
+
+        goal_pose = (
+            current_pose.copy()
+        )
+
+        goal_pose[
+            :3,
+            3,
+        ] = goal
+
+        if orientation is not None:
+            goal_pose[
+                :3,
+                :3,
+            ] = orientation
+
+        self.cartesian_waypoints = (
+            self.segmented_poses(
+                current_pose,
+                goal_pose,
+            )
+        )
+
+        self.cartesian_waypoint_total = (
+            len(
+                self.cartesian_waypoints
+            )
+        )
+
+        self.get_logger().info(
+            f'Cartesian path: '
+            f'{self.cartesian_waypoint_total} '
+            f'waypoints; '
+            f'start=('
+            f'{current_pose[0,3]:.3f}, '
+            f'{current_pose[1,3]:.3f}, '
+            f'{current_pose[2,3]:.3f}) '
+            f'goal=('
+            f'{goal_pose[0,3]:.3f}, '
+            f'{goal_pose[1,3]:.3f}, '
+            f'{goal_pose[2,3]:.3f})'
+        )
+
+        return (
+            self
+            .publish_next_cartesian_waypoint()
+        )
+
+    def publish_next_cartesian_waypoint(
+        self,
+    ):
+        if not self.cartesian_waypoints:
+            return True
+
+        target_pose = (
+            self
+            .cartesian_waypoints
+            .pop(0)
+        )
+
+        waypoint_index = (
+            self.cartesian_waypoint_total
+            - len(
+                self.cartesian_waypoints
+            )
+        )
+
+        current_pose = (
+            self.current_left_pose()
+        )
+
+        if current_pose is None:
+            self.fail_active_command(
+                'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+            )
+            return False
+
+        seed = {
+            name:
+            self.joint_positions[name]
+
+            for name
+            in self.ik_chain_movable_names
+        }
+
+        (
+            success,
+            solution,
+            _,
+            position_error,
+            rotation_error,
+        ) = solve_ik(
+            self.ik_chain,
+            seed,
+            target_pose,
+            self.ik_lower,
+            self.ik_upper,
+            LEFT_ARM_JOINTS,
+        )
+
+        if not success:
+            position_error_norm = (
+                np.linalg.norm(
+                    position_error
+                )
+            )
+
+            rotation_error_norm = (
+                np.linalg.norm(
+                    rotation_error
+                )
+            )
+
+            if (
+                position_error_norm
+                <= 0.010
+                and
+                rotation_error_norm
+                <= math.radians(2.0)
+            ):
+                self.get_logger().warning(
+                    f'Accepting approximate IK '
+                    f'at waypoint '
+                    f'{waypoint_index}/'
+                    f'{self.cartesian_waypoint_total}: '
+                    f'position_error='
+                    f'{position_error_norm:.4f} m, '
+                    f'rotation_error='
+                    f'{math.degrees(rotation_error_norm):.2f} deg'
+                )
+
+            else:
+                self.get_logger().error(
+                    f'Task IK failed at waypoint '
+                    f'{waypoint_index}/'
+                    f'{self.cartesian_waypoint_total}: '
+                    f'target=('
+                    f'{target_pose[0,3]:.3f}, '
+                    f'{target_pose[1,3]:.3f}, '
+                    f'{target_pose[2,3]:.3f}), '
+                    f'current=('
+                    f'{current_pose[0,3]:.3f}, '
+                    f'{current_pose[1,3]:.3f}, '
+                    f'{current_pose[2,3]:.3f}), '
+                    f'position_error='
+                    f'{position_error_norm:.6f}, '
+                    f'rotation_error='
+                    f'{rotation_error_norm:.6f}'
+                )
+
+                if (
+                    self.active_command
+                    == 'LIFT_AND_RETRACT'
+                    and
+                    self.task_stage
+                    == 'RETRACTING_FIRST'
+                ):
+                    self.get_logger().warning(
+                        'Retract reached arm IK limit; '
+                        'keeping maximum achieved withdrawal '
+                        'and continuing to lift'
+                    )
+
+                    self.cartesian_waypoints = []
+
+                    return True
+
+                if (
+                    self.active_command
+                    == 'LIFT_AND_RETRACT'
+                    and
+                    self.task_stage
+                    == 'LIFTING_AFTER_RETRACT'
+                ):
+                    self.get_logger().warning(
+                        'Lift reached arm IK limit; '
+                        'keeping maximum achieved lift '
+                        'and continuing to transport'
+                    )
+
+                    self.cartesian_waypoints = []
+
+                    return True
+
+                self.fail_active_command(
+                    'IK_NO_SOLUTION'
+                )
+
+                return False
+
+        candidate_joint_target = [
+            solution[name]
+            for name
+            in LEFT_ARM_JOINTS
+        ]
+
+        joint_jump = max(
+            abs(
+                solution[name]
+                - seed[name]
+            )
+            for name
+            in LEFT_ARM_JOINTS
+        )
+
+        if joint_jump > 0.35:
+            self.get_logger().error(
+                f'Rejecting Cartesian waypoint '
+                f'{waypoint_index}/'
+                f'{self.cartesian_waypoint_total}: '
+                f'joint jump='
+                f'{joint_jump:.3f} rad'
+            )
+
+            self.fail_active_command(
+                'UNSAFE_IK_JUMP'
+            )
+
+            return False
+
+        self.cartesian_joint_target = (
+            candidate_joint_target
+        )
+
+        self.cartesian_ik_seed = (
+            dict(solution)
+        )
+
+        self.cartesian_pose_target = (
+            target_pose
+        )
+
+        self.stage_started_at = (
+            time.monotonic()
+        )
+
+        self.publish_single_target(
+            self.left_trajectory_publisher,
+            LEFT_ARM_JOINTS,
+            self.cartesian_joint_target,
+            3,
+        )
+
+        return True
+
+    def cartesian_waypoint_reached(
+        self,
+    ):
+        if (
+            self.cartesian_joint_target
+            is None
+        ):
+            return False
+
+        if not self.group_near(
+            LEFT_ARM_JOINTS,
+            self.cartesian_joint_target,
+            CARTESIAN_JOINT_TOLERANCE,
+        ):
+            return False
+
+        measured_pose = (
+            self.current_left_pose()
+        )
+
+        if measured_pose is None:
+            return False
+
+        position_error = (
+            np.linalg.norm(
+                self.cartesian_pose_target[
+                    :3,
+                    3,
+                ]
+                - measured_pose[
+                    :3,
+                    3,
+                ]
+            )
+        )
+
+        rotation_error = (
+            np.linalg.norm(
+                rotation_vector(
+                    self.cartesian_pose_target[
+                        :3,
+                        :3,
+                    ]
+                    @ measured_pose[
+                        :3,
+                        :3,
+                    ].T
+                )
+            )
+        )
+
+        return (
+            position_error
+            <= CARTESIAN_POSITION_TOLERANCE_M
+            and
+            rotation_error
+            <= CARTESIAN_ROTATION_TOLERANCE_RAD
+        )
+
+    def continue_cartesian_path(
+        self,
+    ):
+        if (
+            self.cartesian_joint_target
+            is None
+        ):
+            self.fail_active_command(
+                'MISSING_CARTESIAN_TARGET'
+            )
+            return False
+
+        # Final book insertion needs much tighter completion
+        # than normal arm motions.  The generic 0.04 rad arm
+        # tolerance can correspond to more than 1 cm at the gripper.
+        if (
+            self.active_command == 'GRASP'
+            and self.task_stage == 'APPROACHING_BOOK'
+        ):
+            waypoint_joint_tolerance = (
+                CARTESIAN_JOINT_TOLERANCE
+            )
+        else:
+            waypoint_joint_tolerance = (
+                ARM_TOLERANCE
+            )
+
+        if self.group_near(
+            LEFT_ARM_JOINTS,
+            self.cartesian_joint_target,
+            waypoint_joint_tolerance,
+        ):
+            if not self.cartesian_waypoints:
+                return True
+
+            self.publish_next_cartesian_waypoint()
+
+            return False
+
+        current_pose = (
+            self.current_left_pose()
+        )
+
+        if (
+            current_pose is not None
+            and
+            self.cartesian_pose_target
+            is not None
+        ):
+            position_error = (
+                np.linalg.norm(
+                    current_pose[
+                        :3,
+                        3,
+                    ]
+                    - self.cartesian_pose_target[
+                        :3,
+                        3,
+                    ]
+                )
+            )
+
+            rotation_delta = (
+                self.cartesian_pose_target[
+                    :3,
+                    :3,
+                ].T
+                @ current_pose[
+                    :3,
+                    :3,
+                ]
+            )
+
+            rotation_cos = np.clip(
+                (
+                    np.trace(
+                        rotation_delta
+                    )
+                    - 1.0
+                )
+                / 2.0,
+                -1.0,
+                1.0,
+            )
+
+            rotation_error = (
+                math.acos(
+                    rotation_cos
+                )
+            )
+
+            if (
+                self.active_command == 'GRASP'
+                and self.task_stage == 'APPROACHING_BOOK'
+            ):
+                measured_position_tolerance = 0.005
+                measured_rotation_tolerance = math.radians(3.0)
+            else:
+                measured_position_tolerance = 0.015
+                measured_rotation_tolerance = math.radians(8.0)
+
+            if (
+                position_error
+                < measured_position_tolerance
+                and
+                rotation_error
+                < measured_rotation_tolerance
+            ):
+                self.get_logger().info(
+                    f'Waypoint accepted '
+                    f'from measured pose: '
+                    f'position_error='
+                    f'{position_error:.3f} m, '
+                    f'rotation_error='
+                    f'{math.degrees(rotation_error):.1f} deg'
+                )
+
+                if not self.cartesian_waypoints:
+                    return True
+
+                self.publish_next_cartesian_waypoint()
+
+                return False
+
+        waypoint_elapsed = (
+            time.monotonic()
+            - self.stage_started_at
+        )
+
+        if waypoint_elapsed > 8.0:
+            if (
+                current_pose is not None
+                and
+                self.cartesian_pose_target
+                is not None
+            ):
+                position_error = (
+                    np.linalg.norm(
+                        current_pose[
+                            :3,
+                            3,
+                        ]
+                        - self.cartesian_pose_target[
+                            :3,
+                            3,
+                        ]
+                    )
+                )
+
+                if (
+                    self.active_command == 'GRASP'
+                    and self.task_stage == 'APPROACHING_BOOK'
+                ):
+                    timeout_position_tolerance = 0.008
+                else:
+                    timeout_position_tolerance = 0.050
+
+                if position_error < timeout_position_tolerance:
+                    self.get_logger().warning(
+                        f'Waypoint close enough '
+                        f'after '
+                        f'{waypoint_elapsed:.1f}s; '
+                        f'continuing. '
+                        f'position_error='
+                        f'{position_error:.3f} m'
+                    )
+
+                    if not self.cartesian_waypoints:
+                        return True
+
+                    self.publish_next_cartesian_waypoint()
+
+                    return False
+
+            self.get_logger().error(
+                f'Cartesian waypoint '
+                f'timed out after '
+                f'{waypoint_elapsed:.1f}s'
+            )
+
+            self.fail_active_command(
+                'WAYPOINT_TIMEOUT'
+            )
+
+            return False
+
+        return False
+
+    def start_prepare_grasp(
+        self,
+    ):
+        target = self.fresh_target(
+            self.book_target,
+            self.book_target_time,
+            'PREPARE_GRASP',
+            'BOOK',
+        )
+
+        if target is None:
+            return
+
+        self.prepared_book_target = (
+            target.copy()
+        )
+
+        standoff_candidates = [
+            PREGRASP_STANDOFF_M,
+            PREGRASP_STANDOFF_M + 0.05,
+            PREGRASP_STANDOFF_M + 0.10,
+            PREGRASP_STANDOFF_M + 0.15,
+        ]
+
+        planned = False
+
+        for standoff in (
+            standoff_candidates
+        ):
+            candidate_goal = (
+                target
+                + np.array([
+                    -standoff,
+                    0.03,
+                    0.0,
+                ])
+            )
+
+            self.get_logger().info(
+                f'Trying PREPARE_GRASP '
+                f'standoff={standoff:.3f}, '
+                f'goal=('
+                f'{candidate_goal[0]:.3f}, '
+                f'{candidate_goal[1]:.3f}, '
+                f'{candidate_goal[2]:.3f})'
+            )
+
+            if self.plan_task_pose(
+                candidate_goal,
+                'PREPARE_GRASP',
+                'BOOK',
+            ):
+                self.task_goal = (
+                    candidate_goal
+                )
+
+                planned = True
+                break
+
+        if not planned:
+            self.publish_status(
+                'FAILED:PREPARE_GRASP:'
+                'IK_NO_SOLUTION'
+            )
+            return
+
+        self.grasp_retry_index = 0
+
+        if not self.begin_task(
+            'PREPARE_GRASP',
+            'POSITIONING_TORSO',
+        ):
+            return
+
+        self.publish_single_target(
+            self.torso_trajectory_publisher,
+            [TORSO_JOINT],
+            [self.task_torso_target],
+            5,
+        )
+
+    def start_grasp(
+        self,
+    ):
+        if (
+            self.prepared_book_target
+            is None
+        ):
+            self.publish_status(
+                'FAILED:GRASP:'
+                'BOOK_TARGET_UNAVAILABLE'
+            )
+            return
+
+        if (
+            self.book_target is not None
+            and
+            self.target_is_fresh(
+                self.book_target_time
+            )
+        ):
+            target = (
+                self.book_target.copy()
+            )
+
+            self.get_logger().info(
+                'GRASP using fresh '
+                'stabilized book target'
+            )
+
+        else:
+            target = (
+                self
+                .prepared_book_target
+                .copy()
+            )
+
+            self.get_logger().warning(
+                'Fresh GRASP target unavailable; '
+                'using frozen PREPARE_GRASP target'
+            )
+
+        delta = float(
+            np.linalg.norm(
+                target
+                - self.prepared_book_target
+            )
+        )
+
+        self.get_logger().info(
+            f'GRASP target: '
+            f'x={target[0]:.3f}, '
+            f'y={target[1]:.3f}, '
+            f'z={target[2]:.3f}, '
+            f'change_from_prepared='
+            f'{delta:.3f} m'
+        )
+
+        current_pose = (
+            self.current_left_pose()
+        )
+
+        if current_pose is None:
+            self.publish_status(
+                'FAILED:GRASP:'
+                'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+            )
+            return
+
+        lateral_error = (
+            target[1]
+            - current_pose[
+                1,
+                3,
+            ]
+        )
+
+        lateral_step = float(
+            np.clip(
+                lateral_error,
+                -0.008,
+                0.008,
+            )
+        )
+
+        # Small positive-Y bias based on
+        # visual centering observations.
+        lateral_goal = np.array([
+            current_pose[0, 3],
+
+            (
+                current_pose[1, 3]
+                + lateral_step
+                + 0.004
+            ),
+
+            current_pose[2, 3],
+        ])
+
+        self.grasp_final_insertion_goal = (
+            np.array([
+                # +30 mm restored because +15 mm
+                # caused repeated NO_BOOK_CONTACT.
+                target[0] + 0.03,
+
+                lateral_goal[1],
+
+                # Keep measured hand height.
+                current_pose[2, 3],
+            ])
+        )
+
+        self.grasp_base_x = float(
+            self
+            .grasp_final_insertion_goal[
+                0
+            ]
+        )
+
+        self.grasp_base_y = float(
+            self
+            .grasp_final_insertion_goal[
+                1
+            ]
+        )
+
+        self.grasp_straight_rotation = (
+            rotation_from_rpy(
+                math.radians(-180.0),
+                0.0,
+                0.0,
+            )
+        )
+
+        self.task_goal = (
+            self
+            .grasp_final_insertion_goal
+            .copy()
+        )
+
+        self.get_logger().info(
+            f'GRASP final lateral correction: '
+            f'error={lateral_error:.3f} m, '
+            f'step={lateral_step:.3f} m'
+        )
+
+        if not self.begin_task(
+            'GRASP',
+            'FINAL_LATERAL_ALIGN',
+        ):
+            return
+
+        self.set_cartesian_path(
+            lateral_goal,
+            None,
+        )
+
+    def start_lift_and_retract(
+        self,
+    ):
+        if not self.grasp_confirmed:
+            self.publish_status(
+                'FAILED:LIFT_AND_RETRACT:'
+                'NO_CONFIRMED_GRASP'
+            )
+            return
+
+        current_pose = (
+            self.current_left_pose()
+        )
+
+        if current_pose is None:
+            self.publish_status(
+                'FAILED:LIFT_AND_RETRACT:'
+                'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+            )
+            return
+
+        retract_goal = (
+            current_pose[:3, 3]
+            + np.array([
+                -GRASP_RETRACT_M,
+                0.0,
+                0.0,
+            ])
+        )
+
+        self.task_goal = (
+            retract_goal
+        )
+
+        if not self.begin_task(
+            'LIFT_AND_RETRACT',
+            'RETRACTING_FIRST',
+        ):
+            return
+
+        self.get_logger().info(
+            'Book grasped; securing gripper '
+            'and retracting from shelf '
+            'before lifting'
+        )
+
+        self.publish_single_target(
+            self.left_gripper_trajectory_publisher,
+            [LEFT_GRIPPER_JOINT],
+            [GRIPPER_CLOSED_POSITION],
+            1,
+        )
+
+        self.set_cartesian_path(
+            retract_goal
+        )
+
+    def start_transport_pose(
+        self,
+    ):
+        if not self.grasp_confirmed:
+            self.publish_status(
+                'FAILED:TRANSPORT_POSE:'
+                'NO_CONFIRMED_GRASP'
+            )
+            return
+
+        self.get_logger().info(
+            'Starting staged transport: '
+            'fold elbow inward before '
+            'full tuck'
+        )
+
+        self.start_tuck_arms(
+            'TRANSPORT_POSE'
+        )
+
+    def start_prepare_place(
+        self,
+    ):
+        target = self.fresh_target(
+            self.bin_target,
+            self.bin_target_time,
+            'PREPARE_PLACE',
+            'BIN',
+        )
+
+        if target is None:
+            return
+
+        if not self.grasp_confirmed:
+            self.publish_status(
+                'FAILED:PREPARE_PLACE:'
+                'NO_CONFIRMED_GRASP'
+            )
+            return
+
+        self.prepared_bin_target = (
+            target.copy()
+        )
+
+        self.task_goal = (
+            target
+            + np.array([
+                0.0,
+                0.0,
+                PREPLACE_CLEARANCE_M,
+            ])
+        )
+
+        if not self.plan_task_pose(
+            self.task_goal,
+            'PREPARE_PLACE',
+            'BIN',
+        ):
+            return
+
+        if not self.begin_task(
+            'PREPARE_PLACE',
+            'POSITIONING_TORSO',
+        ):
+            return
+
+        self.publish_single_target(
+            self.torso_trajectory_publisher,
+            [TORSO_JOINT],
+            [self.task_torso_target],
+            5,
+        )
+
+    def start_place(
+        self,
+    ):
+        if (
+            self.prepared_bin_target
+            is None
+        ):
+            self.publish_status(
+                'FAILED:PLACE:'
+                'BIN_TARGET_UNAVAILABLE'
+            )
+            return
+
+        target = (
+            self
+            .prepared_bin_target
+            .copy()
+        )
+
+        if not self.grasp_confirmed:
+            self.publish_status(
+                'FAILED:PLACE:'
+                'NO_CONFIRMED_GRASP'
+            )
+            return
+
+        self.task_goal = (
+            target
+            + np.array([
+                0.0,
+                0.0,
+                0.02,
+            ])
+        )
+
+        if not self.begin_task(
+            'PLACE',
+            'LOWERING_BOOK',
+        ):
+            return
+
+        self.set_cartesian_path(
+            self.task_goal,
+            self.task_rotation,
+        )
+
+    def control_loop(
+        self,
+    ):
+        # Keep commanding the left gripper closed
+        # continuously while carrying the book.
+        if (
+            self.grasp_confirmed
+            and
+            self.active_command
+            != 'PLACE'
+        ):
+            now = time.monotonic()
+
+            gripper_position = (
+                self.joint_positions.get(
+                    LEFT_GRIPPER_JOINT
+                )
+            )
+
+            gripper_effort = (
+                self.joint_efforts.get(
+                    LEFT_GRIPPER_JOINT
+                )
+            )
+
+            if (
+                now
+                - self.last_gripper_lock_command
+                >= 0.20
+            ):
+                self.publish_single_target(
+                    self.left_gripper_trajectory_publisher,
+                    [LEFT_GRIPPER_JOINT],
+                    [
+                        self
+                        .gripper_lock_position
+                    ],
+                    1,
+                )
+
+                self.last_gripper_lock_command = (
+                    now
+                )
+
+                if (
+                    gripper_position is not None
+                    and
+                    gripper_effort is not None
+                ):
+                    self.get_logger().info(
+                        f'Grip hold: '
+                        f'position='
+                        f'{gripper_position:.4f}, '
+                        f'effort='
+                        f'{gripper_effort:.3f}'
+                    )
+
+        if (
+            self.active_command
+            is None
+        ):
+            return
+
+        if self.collision_detected:
+            self.fail_active_command(
+                'COLLISION_DETECTED'
+            )
+            return
+
+        if (
+            time.monotonic()
+            > self.deadline
+        ):
+            self.fail_active_command(
+                'TIMEOUT'
+            )
+            return
+
+        if (
+            self.active_command
+            == 'MOVE_LEFT_REL'
+        ):
+            if self.group_near(
+                LEFT_ARM_JOINTS,
+                self.cartesian_joint_target,
+                CARTESIAN_JOINT_TOLERANCE,
+            ):
+                positions = {
+                    name:
+                    self.joint_positions[name]
+
+                    for name
+                    in self.ik_chain_movable_names
+                }
+
+                measured_pose = (
+                    forward_kinematics(
+                        self.ik_chain,
+                        positions,
+                    )
+                )
+
+                position_error = (
+                    np.linalg.norm(
+                        self.cartesian_pose_target[
+                            :3,
+                            3,
+                        ]
+                        - measured_pose[
+                            :3,
+                            3,
+                        ]
+                    )
+                )
+
+                rotation_error = (
+                    np.linalg.norm(
+                        rotation_vector(
+                            self.cartesian_pose_target[
+                                :3,
+                                :3,
+                            ]
+                            @ measured_pose[
+                                :3,
+                                :3,
+                            ].T
+                        )
+                    )
+                )
+
+                if (
+                    position_error
+                    <= CARTESIAN_POSITION_TOLERANCE_M
+                    and
+                    rotation_error
+                    <= CARTESIAN_ROTATION_TOLERANCE_RAD
+                ):
+                    self.publish_status(
+                        'SUCCEEDED:MOVE_LEFT_REL'
+                    )
+
+                    self.get_logger().info(
+                        f'MOVE_LEFT_REL verified: '
+                        f'position_error='
+                        f'{position_error:.6f}, '
+                        f'rotation_error='
+                        f'{rotation_error:.6f}'
+                    )
+
+                    self.clear_active_command()
+
+            return
+
+        if (
+            self.active_command
+            == 'PREPARE_GRASP'
+        ):
+            if (
+                self.task_stage
+                == 'POSITIONING_TORSO'
+            ):
+                if self.joint_near(
+                    TORSO_JOINT,
+                    self.task_torso_target,
+                    TORSO_TOLERANCE,
+                ):
+                    self.task_stage = (
+                        'OPENING_GRIPPER'
+                    )
+
+                    self.publish_single_target(
+                        self.left_gripper_trajectory_publisher,
+                        [LEFT_GRIPPER_JOINT],
+                        [GRIPPER_OPEN_POSITION],
+                        3,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'OPENING_GRIPPER'
+            ):
+                if self.joint_near(
+                    LEFT_GRIPPER_JOINT,
+                    GRIPPER_OPEN_POSITION,
+                    GRIPPER_TOLERANCE,
+                ):
+                    self.task_stage = (
+                        'MOVING_TO_SAFE_UNTUCK'
+                    )
+
+                    self.publish_single_target(
+                        self.left_trajectory_publisher,
+                        LEFT_ARM_JOINTS,
+                        LEFT_TUCK_WAYPOINTS[0][0],
+                        5,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'MOVING_TO_SAFE_UNTUCK'
+            ):
+                if self.group_near(
+                    LEFT_ARM_JOINTS,
+                    LEFT_TUCK_WAYPOINTS[0][0],
+                    ARM_TOLERANCE,
+                ):
+                    if (
+                        self.planned_task_joint_target
+                        is None
+                    ):
+                        self.fail_active_command(
+                            'IK_PLAN_UNAVAILABLE'
+                        )
+                        return
+
+                    preshape_target = list(
+                        LEFT_TUCK_WAYPOINTS[
+                            0
+                        ][0]
+                    )
+
+                    preshape_target[0] = (
+                        self
+                        .planned_task_joint_target[
+                            0
+                        ]
+                    )
+
+                    preshape_target[1] = (
+                        self
+                        .planned_task_joint_target[
+                            1
+                        ]
+                    )
+
+                    preshape_target[2] = (
+                        self
+                        .planned_task_joint_target[
+                            2
+                        ]
+                    )
+
+                    # Keep elbow tucked.
+                    preshape_target[3] = (
+                        -2.20
+                    )
+
+                    self.cartesian_joint_target = (
+                        preshape_target
+                    )
+
+                    self.get_logger().info(
+                        f'Moving to high '
+                        f'elbow-tucked preshape: '
+                        f'J1='
+                        f'{preshape_target[0]:.3f}, '
+                        f'J2='
+                        f'{preshape_target[1]:.3f}, '
+                        f'J3='
+                        f'{preshape_target[2]:.3f}, '
+                        f'J4='
+                        f'{preshape_target[3]:.3f}'
+                    )
+
+                    self.task_stage = (
+                        'MOVING_TO_HIGH_PRESHAPE'
+                    )
+
+                    self.publish_single_target(
+                        self.left_trajectory_publisher,
+                        LEFT_ARM_JOINTS,
+                        preshape_target,
+                        6,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'MOVING_TO_HIGH_PRESHAPE'
+            ):
+                if self.group_near(
+                    LEFT_ARM_JOINTS,
+                    self.cartesian_joint_target,
+                    ARM_TOLERANCE,
+                ):
+                    if (
+                        self.planned_task_joint_target
+                        is None
+                    ):
+                        self.fail_active_command(
+                            'IK_PLAN_UNAVAILABLE'
+                        )
+                        return
+
+                    self.get_logger().info(
+                        'High elbow-tucked '
+                        'preshape reached; '
+                        'extending elbow into '
+                        'final pregrasp pose'
+                    )
+
+                    self.task_stage = (
+                        'MOVING_TO_PREGRASP'
+                    )
+
+                    self.cartesian_joint_target = (
+                        list(
+                            self
+                            .planned_task_joint_target
+                        )
+                    )
+
+                    self.publish_single_target(
+                        self.left_trajectory_publisher,
+                        LEFT_ARM_JOINTS,
+                        self.cartesian_joint_target,
+                        6,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'ALIGNING_PREGRASP_HEIGHT'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    lateral_error = (
+                        self.task_goal[1]
+                        - current_pose[
+                            1,
+                            3,
+                        ]
+                    )
+
+                    lateral_step = float(
+                        np.clip(
+                            lateral_error
+                            * 0.5,
+                            -0.08,
+                            0.08,
+                        )
+                    )
+
+                    lateral_goal = np.array([
+                        current_pose[0, 3],
+                        (
+                            current_pose[1, 3]
+                            + lateral_step
+                        ),
+                        current_pose[2, 3],
+                    ])
+
+                    self.get_logger().info(
+                        'Pregrasp height aligned; '
+                        'aligning laterally'
+                    )
+
+                    self.task_stage = (
+                        'ALIGNING_PREGRASP_LATERAL'
+                    )
+
+                    self.set_cartesian_path(
+                        lateral_goal,
+                        None,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'ALIGNING_PREGRASP_LATERAL'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    forward_goal = np.array([
+                        self.task_goal[0],
+                        current_pose[1, 3],
+                        self.task_goal[2],
+                    ])
+
+                    self.get_logger().info(
+                        'Pregrasp lateral '
+                        'alignment complete; '
+                        'moving diagonally '
+                        'up and forward'
+                    )
+
+                    self.task_stage = (
+                        'MOVING_PREGRASP_FORWARD'
+                    )
+
+                    self.set_cartesian_path(
+                        forward_goal,
+                        None,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'MOVING_PREGRASP_FORWARD'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    finish_goal = np.array([
+                        current_pose[0, 3],
+                        current_pose[1, 3],
+                        self.task_goal[2],
+                    ])
+
+                    self.get_logger().info(
+                        'Forward pregrasp position '
+                        'reached; finishing height '
+                        'and gripper orientation'
+                    )
+
+                    self.task_stage = (
+                        'FINISHING_PREGRASP_POSE'
+                    )
+
+                    self.set_cartesian_path(
+                        finish_goal,
+                        self.task_rotation,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'FINISHING_PREGRASP_POSE'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    remaining_lateral = (
+                        self.task_goal[1]
+                        - current_pose[
+                            1,
+                            3,
+                        ]
+                    )
+
+                    if (
+                        abs(
+                            remaining_lateral
+                        )
+                        > 0.08
+                    ):
+                        self.get_logger().error(
+                            f'Book is still too far '
+                            f'across robot body: '
+                            f'lateral_error='
+                            f'{remaining_lateral:.3f} m'
+                        )
+
+                        self.fail_active_command(
+                            'BASE_REALIGN_REQUIRED'
+                        )
+
+                        return
+
+                    self.get_logger().info(
+                        'High pregrasp pose reached; '
+                        'applying final small '
+                        'lateral correction'
+                    )
+
+                    self.task_stage = (
+                        'MOVING_TO_PREGRASP'
+                    )
+
+                    self.set_cartesian_path(
+                        self.task_goal,
+                        self.task_rotation,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'MOVING_TO_PREGRASP'
+            ):
+                if self.group_near(
+                    LEFT_ARM_JOINTS,
+                    self.cartesian_joint_target,
+                    ARM_TOLERANCE,
+                ):
+                    measured_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if measured_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    position_error = (
+                        np.linalg.norm(
+                            measured_pose[
+                                :3,
+                                3,
+                            ]
+                            - self
+                            .planned_task_pose[
+                                :3,
+                                3,
+                            ]
+                        )
+                    )
+
+                    self.get_logger().info(
+                        f'Final joint-space '
+                        f'pregrasp reached: '
+                        f'position_error='
+                        f'{position_error:.3f} m'
+                    )
+
+                    if position_error > 0.04:
+                        self.fail_active_command(
+                            'FINAL_PREGRASP_POSITION_ERROR'
+                        )
+                        return
+
+                    self.succeed_active_command()
+
+                return
+
+        # ------------------------------------------------------------
+        # GRASP
+        # ------------------------------------------------------------
+
+        if (
+            self.active_command
+            == 'GRASP'
+        ):
+            if (
+                self.task_stage
+                == 'FINAL_LATERAL_ALIGN'
+            ):
+                current_pose = (
+                    self.current_left_pose()
+                )
+
+                if current_pose is None:
+                    self.fail_active_command(
+                        'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                    )
+                    return
+
+                desired_y = (
+                    self
+                    .grasp_final_insertion_goal[
+                        1
+                    ]
+                )
+
+                y_error = abs(
+                    current_pose[1, 3]
+                    - desired_y
+                )
+
+                if y_error > 0.003:
+                    if (
+                        time.monotonic()
+                        - self.stage_started_at
+                        > 1.0
+                    ):
+                        self.get_logger().warning(
+                            f'Lateral grasp alignment '
+                            f'not reached yet: '
+                            f'current_y='
+                            f'{current_pose[1,3]:.3f}, '
+                            f'target_y='
+                            f'{desired_y:.3f}, '
+                            f'error='
+                            f'{y_error:.3f} m'
+                        )
+
+                        retry_goal = np.array([
+                            current_pose[0, 3],
+                            desired_y,
+                            current_pose[2, 3],
+                        ])
+
+                        self.set_cartesian_path(
+                            retry_goal,
+                            None,
+                        )
+
+                    return
+
+                self.get_logger().info(
+                    f'Final lateral alignment '
+                    f'verified: '
+                    f'y_error='
+                    f'{y_error:.3f} m'
+                )
+
+                self.grasp_straight_rotation = (
+                    current_pose[
+                        :3,
+                        :3,
+                    ].copy()
+                )
+
+                self.task_stage = (
+                    'APPROACHING_BOOK'
+                )
+
+                self.get_logger().info(
+                    'Lateral alignment complete; '
+                    'keeping current gripper orientation '
+                    'and proceeding directly '
+                    'to insertion'
+                )
+
+                self.set_cartesian_path(
+                    self.grasp_final_insertion_goal,
+                    self.grasp_straight_rotation,
+                )
+
+                return
+
+            if (
+                self.task_stage
+                == 'STRAIGHTENING_GRIPPER'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    rotation_error = (
+                        np.linalg.norm(
+                            rotation_vector(
+                                self.grasp_straight_rotation
+                                @ current_pose[
+                                    :3,
+                                    :3,
+                                ].T
+                            )
+                        )
+                    )
+
+                    if (
+                        rotation_error
+                        > math.radians(3.0)
+                    ):
+                        self.get_logger().warning(
+                            f'Gripper not straight '
+                            f'enough: '
+                            f'rotation_error='
+                            f'{math.degrees(rotation_error):.1f} deg'
+                        )
+
+                        retry_goal = np.array([
+                            current_pose[0, 3],
+                            current_pose[1, 3],
+                            current_pose[2, 3],
+                        ])
+
+                        self.set_cartesian_path(
+                            retry_goal,
+                            self.grasp_straight_rotation,
+                        )
+
+                        return
+
+                    self.get_logger().info(
+                        f'Gripper straight verified: '
+                        f'rotation_error='
+                        f'{math.degrees(rotation_error):.1f} deg'
+                    )
+
+                    self.task_stage = (
+                        'APPROACHING_BOOK'
+                    )
+
+                    self.set_cartesian_path(
+                        self.grasp_final_insertion_goal,
+                        self.grasp_straight_rotation,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'APPROACHING_BOOK'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    insertion_delta = (
+                        current_pose[
+                            :3,
+                            3,
+                        ]
+                        - self
+                        .grasp_final_insertion_goal
+                    )
+
+                    insertion_position_error = (
+                        np.linalg.norm(
+                            insertion_delta
+                        )
+                    )
+
+                    insertion_x_error = abs(
+                        insertion_delta[0]
+                    )
+
+                    insertion_y_error = abs(
+                        insertion_delta[1]
+                    )
+
+                    insertion_z_error = abs(
+                        insertion_delta[2]
+                    )
+
+                    insertion_rotation_error = (
+                        np.linalg.norm(
+                            rotation_vector(
+                                self.grasp_straight_rotation
+                                @ current_pose[
+                                    :3,
+                                    :3,
+                                ].T
+                            )
+                        )
+                    )
+
+                    # X is the important axis here: this is the
+                    # straight motion that gets the fingers around
+                    # the front of the book.  Do not close while
+                    # still ~15 mm short.
+                    if (
+                        insertion_x_error > 0.005
+                        or
+                        insertion_y_error > 0.008
+                        or
+                        insertion_z_error > 0.008
+                        or
+                        insertion_rotation_error
+                        > math.radians(3.0)
+                    ):
+                        self.get_logger().warning(
+                            f'Insertion not actually reached: '
+                            f'x_error={insertion_x_error:.3f} m, '
+                            f'y_error={insertion_y_error:.3f} m, '
+                            f'z_error={insertion_z_error:.3f} m, '
+                            f'total_error={insertion_position_error:.3f} m, '
+                            f'rotation_error='
+                            f'{math.degrees(insertion_rotation_error):.1f} deg; '
+                            f'retrying'
+                        )
+
+                        self.set_cartesian_path(
+                            self.grasp_final_insertion_goal,
+                            self.grasp_straight_rotation,
+                        )
+
+                        return
+
+                    self.get_logger().info(
+                        f'Insertion verified: '
+                        f'x_error={insertion_x_error:.3f} m, '
+                        f'y_error={insertion_y_error:.3f} m, '
+                        f'z_error={insertion_z_error:.3f} m, '
+                        f'total_error={insertion_position_error:.3f} m, '
+                        f'rotation_error='
+                        f'{math.degrees(insertion_rotation_error):.1f} deg; '
+                        f'closing gripper'
+                    )
+
+                    self.task_stage = (
+                        'CLOSING_GRIPPER'
+                    )
+
+                    self.stage_started_at = (
+                        time.monotonic()
+                    )
+
+                    self.publish_single_target(
+                        self.left_gripper_trajectory_publisher,
+                        [LEFT_GRIPPER_JOINT],
+                        [GRIPPER_CLOSED_POSITION],
+                        3,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'GRASP_RETRY_OPENING'
+            ):
+                if (
+                    time.monotonic()
+                    - self.stage_started_at
+                    >= 2.0
+                ):
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    # IMPORTANT:
+                    # back away before moving sideways.
+                    retract_goal = np.array([
+                        current_pose[0, 3]
+                        - 0.05,
+
+                        current_pose[1, 3],
+
+                        current_pose[2, 3],
+                    ])
+
+                    self.get_logger().info(
+                        'Gripper reopened; '
+                        'retracting before '
+                        'lateral retry'
+                    )
+
+                    self.task_stage = (
+                        'GRASP_RETRY_RETRACTING'
+                    )
+
+                    self.set_cartesian_path(
+                        retract_goal,
+                        None,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'GRASP_RETRY_RETRACTING'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    retry_goal = np.array([
+                        current_pose[0, 3],
+
+                        self
+                        .grasp_final_insertion_goal[
+                            1
+                        ],
+
+                        current_pose[2, 3],
+                    ])
+
+                    self.get_logger().info(
+                        'Retry retract complete; '
+                        'moving laterally while '
+                        'clear of book'
+                    )
+
+                    self.task_stage = (
+                        'GRASP_RETRY_ALIGNING'
+                    )
+
+                    self.set_cartesian_path(
+                        retry_goal,
+                        None,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'GRASP_RETRY_ALIGNING'
+            ):
+                if self.continue_cartesian_path():
+                    self.get_logger().info(
+                        'Retry lateral position reached; '
+                        're-inserting'
+                    )
+
+                    self.task_stage = (
+                        'APPROACHING_BOOK'
+                    )
+
+                    self.set_cartesian_path(
+                        self.grasp_final_insertion_goal,
+                        self.grasp_straight_rotation,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'CLOSING_GRIPPER'
+                and
+                (
+                    time.monotonic()
+                    - self.stage_started_at
+                )
+                >= 4.0
+            ):
+                if (
+                    self
+                    .grasp_contact_detected
+                ):
+                    gripper_position = (
+                        self.joint_positions.get(
+                            LEFT_GRIPPER_JOINT
+                        )
+                    )
+
+                    if (
+                        gripper_position
+                        is None
+                    ):
+                        self.fail_active_command(
+                            'GRIPPER_STATE_UNAVAILABLE'
+                        )
+                        return
+
+                    self.grasp_confirmed = (
+                        True
+                    )
+
+                    self.gripper_lock_position = (
+                        GRIPPER_CLOSED_POSITION
+                    )
+
+                    self.get_logger().info(
+                        f'GRASP confirmed: '
+                        f'both fingers contact book, '
+                        f'gripper='
+                        f'{gripper_position:.4f}'
+                    )
+
+                    self.succeed_active_command()
+
+                else:
+                    self.grasp_retry_index += 1
+
+                    if (
+                        self.grasp_retry_index
+                        >= len(
+                            self
+                            .grasp_retry_offsets
+                        )
+                    ):
+                        self.fail_active_command(
+                            'NO_BOOK_CONTACT'
+                        )
+                        return
+
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    retry_offset = (
+                        self
+                        .grasp_retry_offsets[
+                            self
+                            .grasp_retry_index
+                        ]
+                    )
+
+                    retry_depth = (
+                        self
+                        .grasp_retry_depth_offsets[
+                            self
+                            .grasp_retry_index
+                        ]
+                    )
+
+                    self.get_logger().warning(
+                        f'Grasp contact incomplete; '
+                        f'retrying {abs(retry_offset) * 1000.0:.1f} mm '
+                        f'right and {retry_depth * 1000.0:.1f} mm deeper'
+                    )
+
+                    self.publish_single_target(
+                        self.left_gripper_trajectory_publisher,
+                        [LEFT_GRIPPER_JOINT],
+                        [GRIPPER_OPEN_POSITION],
+                        2,
+                    )
+
+                    retry_goal = (
+                        self
+                        .grasp_final_insertion_goal
+                        .copy()
+                    )
+
+                    retry_goal[0] = (
+                        self.grasp_base_x
+                        + retry_depth
+                    )
+
+                    retry_goal[1] = (
+                        self.grasp_base_y
+                        + retry_offset
+                    )
+
+                    self.grasp_final_insertion_goal = (
+                        retry_goal
+                    )
+
+                    self.grasp_contact_detected = (
+                        False
+                    )
+
+                    self.grasp_contact_since = (
+                        None
+                    )
+
+                    self.task_stage = (
+                        'GRASP_RETRY_OPENING'
+                    )
+
+                    self.stage_started_at = (
+                        time.monotonic()
+                    )
+
+            return
+
+        # ------------------------------------------------------------
+        # LIFT + RETRACT
+        # ------------------------------------------------------------
+
+        if (
+            self.active_command
+            == 'LIFT_AND_RETRACT'
+        ):
+            if (
+                self.task_stage
+                == 'RETRACTING_FIRST'
+            ):
+                if self.continue_cartesian_path():
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    lift_goal = (
+                        current_pose[
+                            :3,
+                            3,
+                        ]
+                        + np.array([
+                            0.0,
+                            0.0,
+                            GRASP_LIFT_M,
+                        ])
+                    )
+
+                    self.get_logger().info(
+                        'Book retracted from '
+                        'shelf; lifting'
+                    )
+
+                    self.task_stage = (
+                        'LIFTING_AFTER_RETRACT'
+                    )
+
+                    self.set_cartesian_path(
+                        lift_goal
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'LIFTING_AFTER_RETRACT'
+                and
+                self.continue_cartesian_path()
+            ):
+                self.get_logger().info(
+                    'Book lifted successfully '
+                    'after retraction'
+                )
+
+                self.succeed_active_command()
+
+            return
+
+        if (
+            self.active_command
+            == 'TRANSPORT_POSE'
+        ):
+            # TRANSPORT_POSE is handled by the
+            # tuck-state machine below.
+            pass
+
+        if (
+            self.active_command
+            == 'PREPARE_PLACE'
+        ):
+            if (
+                self.task_stage
+                == 'POSITIONING_TORSO'
+            ):
+                if self.joint_near(
+                    TORSO_JOINT,
+                    self.task_torso_target,
+                    TORSO_TOLERANCE,
+                ):
+                    self.task_stage = (
+                        'MOVING_ABOVE_BIN'
+                    )
+
+                    self.publish_planned_task_pose()
+
+                return
+
+            if (
+                self.task_stage
+                == 'MOVING_ABOVE_BIN'
+            ):
+                if self.continue_cartesian_path():
+                    self.succeed_active_command()
+
+            return
+
+        if (
+            self.active_command
+            == 'PLACE'
+        ):
+            if (
+                self.task_stage
+                == 'LOWERING_BOOK'
+            ):
+                if self.continue_cartesian_path():
+                    self.task_stage = (
+                        'RELEASING_BOOK'
+                    )
+
+                    self.publish_single_target(
+                        self.left_gripper_trajectory_publisher,
+                        [LEFT_GRIPPER_JOINT],
+                        [GRIPPER_OPEN_POSITION],
+                        3,
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'RELEASING_BOOK'
+            ):
+                if self.joint_near(
+                    LEFT_GRIPPER_JOINT,
+                    GRIPPER_OPEN_POSITION,
+                    GRIPPER_TOLERANCE,
+                ):
+                    self.grasp_confirmed = (
+                        False
+                    )
+
+                    current_pose = (
+                        self.current_left_pose()
+                    )
+
+                    if current_pose is None:
+                        self.fail_active_command(
+                            'KINEMATICS_OR_JOINT_STATES_UNAVAILABLE'
+                        )
+                        return
+
+                    retreat_goal = (
+                        current_pose[
+                            :3,
+                            3,
+                        ]
+                        + np.array([
+                            0.0,
+                            0.0,
+                            PREPLACE_CLEARANCE_M,
+                        ])
+                    )
+
+                    self.task_stage = (
+                        'LIFTING_AWAY'
+                    )
+
+                    self.set_cartesian_path(
+                        retreat_goal
+                    )
+
+                return
+
+            if (
+                self.task_stage
+                == 'LIFTING_AWAY'
+                and
+                self.continue_cartesian_path()
+            ):
+                self.succeed_active_command()
+
+            return
+
+        if (
+            self.tuck_stage
+            == 'IDLE'
+        ):
+            if (
+                self.gripper_joint
+                is not None
+                and
+                self.gripper_target
+                is not None
+                and
+                self.joint_near(
+                    self.gripper_joint,
+                    self.gripper_target,
+                    GRIPPER_TOLERANCE,
+                )
+            ):
+                command = (
+                    self.active_command
+                )
+
+                self.publish_status(
+                    f'SUCCEEDED:{command}'
+                )
+
+                self.get_logger().info(
+                    f'{command} verified '
+                    'from joint feedback'
+                )
+
+                self.clear_active_command()
+
+            return
+
+        if (
+            self.tuck_stage
+            == 'RAISING_TORSO'
+        ):
+            if self.joint_near(
+                TORSO_JOINT,
+                self.tuck_torso_clearance_target,
+                TORSO_TOLERANCE,
+            ):
+                if (
+                    self.active_command
+                    == 'TRANSPORT_POSE'
+                    and
+                    self.grasp_confirmed
+                ):
+                    self.transport_fold_target = [
+                        self.joint_positions[
+                            joint
+                        ]
+                        for joint
+                        in LEFT_ARM_JOINTS
+                    ]
+
+                    self.transport_fold_target[
+                        3
+                    ] = -2.20
+
+                    self.publish_single_target(
+                        self.left_trajectory_publisher,
+                        LEFT_ARM_JOINTS,
+                        self.transport_fold_target,
+                        5,
+                    )
+
+                    self.tuck_stage = (
+                        'TRANSPORT_FOLDING_ELBOW'
+                    )
+
+                    self.get_logger().info(
+                        'Torso clear; transport '
+                        'folding elbow inward'
+                    )
+
+                else:
+                    self.publish_trajectory(
+                        self.left_trajectory_publisher,
+                        LEFT_ARM_JOINTS,
+                        LEFT_TUCK_WAYPOINTS,
+                    )
+
+                    self.publish_trajectory(
+                        self.right_trajectory_publisher,
+                        RIGHT_ARM_JOINTS,
+                        RIGHT_TUCK_WAYPOINTS,
+                    )
+
+                    self.tuck_stage = (
+                        'TUCKING_ARMS'
+                    )
+
+            return
+
+        if (
+            self.tuck_stage
+            == 'TRANSPORT_FOLDING_ELBOW'
+        ):
+            if self.group_near(
+                LEFT_ARM_JOINTS,
+                self.transport_fold_target,
+                ARM_TOLERANCE,
+            ):
+                self.get_logger().info(
+                    'Transport elbow folded; '
+                    'continuing into tucked pose'
+                )
+
+                self.publish_trajectory(
+                    self.left_trajectory_publisher,
+                    LEFT_ARM_JOINTS,
+                    LEFT_TUCK_WAYPOINTS,
+                )
+
+                self.publish_trajectory(
+                    self.right_trajectory_publisher,
+                    RIGHT_ARM_JOINTS,
+                    RIGHT_TUCK_WAYPOINTS,
+                )
+
+                self.tuck_stage = (
+                    'TUCKING_ARMS'
+                )
+
+            return
+
+        if (
+            self.tuck_stage
+            == 'TUCKING_ARMS'
+        ):
+            left_ready = (
+                self.group_near(
+                    LEFT_ARM_JOINTS,
+                    LEFT_TUCK_TARGET,
+                    ARM_TOLERANCE,
+                )
+            )
+
+            right_ready = (
+                self.group_near(
+                    RIGHT_ARM_JOINTS,
+                    RIGHT_TUCK_TARGET,
+                    ARM_TOLERANCE,
+                )
+            )
+
+            if (
+                left_ready
+                and right_ready
+            ):
+                self.publish_single_target(
+                    self.torso_trajectory_publisher,
+                    [TORSO_JOINT],
+                    [TORSO_TUCK_POSITION],
+                    5,
+                )
+
+                self.tuck_stage = (
+                    'LOWERING_TORSO'
+                )
+
+                self.get_logger().info(
+                    'Arms tucked; '
+                    'lowering torso'
+                )
+
+            return
+
+        if (
+            self.tuck_stage
+            == 'LOWERING_TORSO'
+        ):
+            arms_ready = (
+                self.group_near(
+                    LEFT_ARM_JOINTS,
+                    LEFT_TUCK_TARGET,
+                    ARM_TOLERANCE,
+                )
+                and
+                self.group_near(
+                    RIGHT_ARM_JOINTS,
+                    RIGHT_TUCK_TARGET,
+                    ARM_TOLERANCE,
+                )
+            )
+
+            torso_ready = (
+                self.joint_near(
+                    TORSO_JOINT,
+                    TORSO_TUCK_POSITION,
+                    TORSO_TOLERANCE,
+                )
+            )
+
+            if (
+                arms_ready
+                and torso_ready
+            ):
+                self.succeed_active_command()
+
+    def publish_trajectory(
+        self,
+        publisher,
+        joint_names,
+        waypoints,
+    ):
+        message = (
+            JointTrajectory()
+        )
+
+        message.joint_names = list(
+            joint_names
+        )
+
+        for (
+            positions,
+            seconds,
+        ) in waypoints:
+            point = (
+                JointTrajectoryPoint()
+            )
+
+            point.positions = list(
+                positions
+            )
+
+            point.time_from_start.sec = (
+                int(seconds)
+            )
+
+            message.points.append(
+                point
+            )
+
+        publisher.publish(
+            message
+        )
+
+    def publish_single_target(
+        self,
+        publisher,
+        joint_names,
+        positions,
+        seconds,
+    ):
+        self.publish_trajectory(
+            publisher,
+            joint_names,
+            [
+                (
+                    positions,
+                    seconds,
+                )
+            ],
+        )
+
+    def joint_near(
+        self,
+        joint_name,
+        target,
+        tolerance,
+    ):
+        position = (
+            self.joint_positions.get(
+                joint_name
+            )
+        )
+
+        return (
+            position is not None
+            and
+            abs(
+                position
+                - target
+            )
+            <= tolerance
+        )
+
+    def group_near(
+        self,
+        joint_names,
+        targets,
+        tolerance,
+    ):
+        return all(
+            self.joint_near(
+                name,
+                target,
+                tolerance,
+            )
+
+            for (
+                name,
+                target,
+            )
+            in zip(
+                joint_names,
+                targets,
+            )
+        )
+
+    def hold_current_pose(
+        self,
+    ):
+        if all(
+            name
+            in self.joint_positions
+            for name
+            in LEFT_ARM_JOINTS
+        ):
+            self.publish_single_target(
+                self.left_trajectory_publisher,
+                LEFT_ARM_JOINTS,
+                [
+                    self.joint_positions[
+                        name
+                    ]
+                    for name
+                    in LEFT_ARM_JOINTS
+                ],
+                1,
+            )
+
+        if all(
+            name
+            in self.joint_positions
+            for name
+            in RIGHT_ARM_JOINTS
+        ):
+            self.publish_single_target(
+                self.right_trajectory_publisher,
+                RIGHT_ARM_JOINTS,
+                [
+                    self.joint_positions[
+                        name
+                    ]
+                    for name
+                    in RIGHT_ARM_JOINTS
+                ],
+                1,
+            )
+
+        if (
+            TORSO_JOINT
+            in self.joint_positions
+        ):
+            self.publish_single_target(
+                self.torso_trajectory_publisher,
+                [TORSO_JOINT],
+                [
+                    self.joint_positions[
+                        TORSO_JOINT
+                    ]
+                ],
+                1,
+            )
+
+        if (
+            LEFT_GRIPPER_JOINT
+            in self.joint_positions
+        ):
+            self.publish_single_target(
+                self.left_gripper_trajectory_publisher,
+                [LEFT_GRIPPER_JOINT],
+                [
+                    self.joint_positions[
+                        LEFT_GRIPPER_JOINT
+                    ]
+                ],
+                1,
+            )
+
+        if (
+            RIGHT_GRIPPER_JOINT
+            in self.joint_positions
+        ):
+            self.publish_single_target(
+                self.right_gripper_trajectory_publisher,
+                [RIGHT_GRIPPER_JOINT],
+                [
+                    self.joint_positions[
+                        RIGHT_GRIPPER_JOINT
+                    ]
+                ],
+                1,
+            )
+
+    def stop_current_motion(
+        self,
+    ):
+        self.hold_current_pose()
+
+        self.clear_active_command()
+
+        self.publish_status(
+            'STOPPED'
+        )
+
+        self.get_logger().warning(
+            'STOP received; '
+            'holding measured pose'
+        )
+
+    def fail_active_command(
+        self,
+        reason,
+    ):
+        command = (
+            self.active_command
+        )
+
+        self.hold_current_pose()
+
+        self.clear_active_command()
+
+        self.publish_status(
+            f'FAILED:{command}:{reason}'
+        )
+
+        self.get_logger().error(
+            f'{command} failed: '
+            f'{reason}'
+        )
+
+    def succeed_active_command(
+        self,
+    ):
+        command = (
+            self.active_command
+        )
+
+        self.publish_status(
+            f'SUCCEEDED:{command}'
+        )
+
+        self.get_logger().info(
+            f'{command} verified '
+            'from measured feedback'
+        )
+
+        self.clear_active_command()
+
+    def clear_active_command(
+        self,
+    ):
+        self.active_command = None
+
+        self.tuck_stage = 'IDLE'
+
+        self.deadline = None
+
+        self.collision_detected = (
+            False
+        )
+
+        self.allowed_initial_contacts.clear()
+
+        self.gripper_joint = None
+        self.gripper_target = None
+
+        self.cartesian_joint_target = (
+            None
+        )
+
+        self.cartesian_pose_target = (
+            None
+        )
+
+        self.cartesian_waypoints = []
+
+        self.cartesian_waypoint_total = (
+            0
+        )
+
+        self.cartesian_ik_seed = None
+
+        self.task_stage = 'IDLE'
+        self.stage_started_at = None
+
+        self.grasp_contact_detected = (
+            False
+        )
+
+        self.grasp_contact_since = (
+            None
+        )
+
+        self.task_goal = None
+
+    def publish_status(
+        self,
+        status,
+    ):
+        message = String()
+
+        message.data = status
+
+        self.status_publisher.publish(
+            message
+        )
+
+    def shutdown_safely(
+        self,
+    ):
+        self.hold_current_pose()
+
+        self.get_logger().info(
+            'Shutdown: '
+            'holding measured pose'
+        )
+
+
+def main(args=None):
+    rclpy.init(
+        args=args
+    )
+
+    node = (
+        ManipulationNode()
+    )
+
+    try:
+        rclpy.spin(node)
+
+    except KeyboardInterrupt:
+        pass
+
+    finally:
+        if rclpy.ok():
+            node.shutdown_safely()
+
+        node.destroy_node()
+
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
